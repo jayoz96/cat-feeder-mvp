@@ -1,36 +1,104 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🐱 上门喂猫 MVP
 
-## Getting Started
+一个连接猫主人和喂猫员的上门喂猫服务平台。猫主人出差或旅行时，可以发布喂猫需求，由附近的喂猫员接单上门服务。
 
-First, run the development server:
+## 技术栈
+
+- **框架**：Next.js 16 (App Router, Server Actions)
+- **语言**：TypeScript (严格模式)
+- **样式**：Tailwind CSS + shadcn/ui
+- **图标**：Lucide React
+- **数据**：内存 Mock 数据 (globalThis 持久化)
+- **地址搜索**：高德 Web 服务 API + 本地地址库降级
+
+## 快速开始
 
 ```bash
+# 安装依赖
+npm install
+
+# 启动开发服务器
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# 构建生产版本
+npm run build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+浏览器打开 [http://localhost:3000](http://localhost:3000) 即可访问。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 环境变量（可选）
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+在项目根目录创建 `.env.local`：
 
-## Learn More
+```
+NEXT_PUBLIC_AMAP_KEY=你的高德API密钥
+```
 
-To learn more about Next.js, take a look at the following resources:
+不配置时地址搜索会使用本地地址库。
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 功能概览
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 猫主人端 (`/user`)
 
-## Deploy on Vercel
+| 功能 | 说明 |
+|------|------|
+| 订单管理 | 查看所有订单及实时状态流转 |
+| 发布需求 | 选择猫咪数量、日期、地址、备注，实时费用预估 |
+| 地址搜索 | 高德 API 关键词联想 + 本地地址库降级 |
+| 常用地址 | 历史地址标签一键填入 |
+| 紧急订单 | 开关切换，自动 1.5 倍加价 |
+| 审核支付 | 查看服务反馈、星级评分、模拟支付宝/微信支付 |
+| 自动完结 | 3 小时未审核自动完成订单 |
+| 猫咪档案 | 查看/添加猫咪信息（品种、性格、饮食备注） |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 喂猫员端 (`/feeder`)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| 功能 | 说明 |
+|------|------|
+| 接单大厅 | 浏览待接订单，支持分页（每页 5 条） |
+| AI 推荐 | 猫多/价高/日期近的订单自动标记推荐 |
+| 加急标识 | 橙色徽章突出显示紧急订单 |
+| 订单详情 | 完整信息 + 费用明细 + 聊天窗口 |
+| 一键导航 | 跳转高德/百度地图导航 |
+| 任务管理 | 进行中 / 待审核 / 历史订单三栏展示 |
+| 服务打卡 | 签到签退自动记录，时间线展示 |
+| 个人主页 | 评分统计、完成订单数、服务评价列表 |
+
+### 订单状态机
+
+```
+待接单 → 已接单 → 服务中 → 待审核 → 已支付
+(pending) (accepted) (in_progress) (pending_review) (paid)
+```
+
+## 项目结构
+
+```
+src/
+├── app/(dashboard)/
+│   ├── feeder/            # 喂猫员端页面
+│   │   ├── [id]/          # 订单详情页
+│   │   ├── profile/       # 个人主页
+│   │   └── tasks/         # 我的任务
+│   └── user/              # 猫主人端页面
+│       ├── cats/          # 猫咪档案管理
+│       └── create/        # 发布需求
+├── components/
+│   ├── ui/                # shadcn 基础组件
+│   └── features/          # 业务组件（地址选择、分页、聊天等）
+├── services/              # 数据服务层
+│   ├── order-service.ts   # 订单 CRUD + 状态流转
+│   ├── cat-service.ts     # 猫咪档案
+│   ├── review-service.ts  # 评价系统
+│   └── mock-data.ts       # 50 条模拟数据
+└── types/                 # TypeScript 类型定义
+```
+
+## 开发命令
+
+```bash
+npm run dev       # 启动开发服务器
+npm run build     # 构建生产版本
+npm run lint      # ESLint 代码检查
+npx tsc --noEmit  # TypeScript 类型检查
+```
