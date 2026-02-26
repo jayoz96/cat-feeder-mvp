@@ -19,21 +19,40 @@ function setStore(orders: Order[]) {
 }
 
 const PRICE_PER_DAY = 50;
+const AUTO_COMPLETE_MS = 3 * 60 * 60 * 1000; // 3 小时
+
+/** 懒检查：pending_review 超过 3 小时自动转 paid */
+function autoCompleteExpired() {
+  const now = Date.now();
+  for (const order of getStore()) {
+    if (
+      order.status === "pending_review" &&
+      order.completedAt &&
+      now - new Date(order.completedAt).getTime() >= AUTO_COMPLETE_MS
+    ) {
+      order.status = "paid";
+    }
+  }
+}
 
 export const OrderService = {
   getOrders(): Order[] {
+    autoCompleteExpired();
     return getStore();
   },
 
   getOrdersByUser(userId: string): Order[] {
+    autoCompleteExpired();
     return getStore().filter((o) => o.userId === userId);
   },
 
   getOrdersByStatus(status: Order["status"]): Order[] {
+    autoCompleteExpired();
     return getStore().filter((o) => o.status === status);
   },
 
   getPendingOrders(): Order[] {
+    autoCompleteExpired();
     return getStore().filter((o) => o.status === "pending");
   },
 

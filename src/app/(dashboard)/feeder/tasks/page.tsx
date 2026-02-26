@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -10,7 +12,7 @@ export default function FeederTasksPage() {
   );
 
   const active = orders.filter((o) => o.status === "accepted" || o.status === "in_progress");
-  const completed = orders.filter((o) => o.status === "completed");
+  const done = orders.filter((o) => o.status === "pending_review" || o.status === "paid" || o.status === "completed");
 
   return (
     <div className="space-y-6">
@@ -38,10 +40,10 @@ export default function FeederTasksPage() {
             </section>
           )}
 
-          {completed.length > 0 && (
+          {done.length > 0 && (
             <section className="space-y-3">
               <h2 className="text-sm font-medium text-muted-foreground">已完成</h2>
-              {completed.map((order) => (
+              {done.map((order) => (
                 <TaskCard key={order.id} order={order} />
               ))}
             </section>
