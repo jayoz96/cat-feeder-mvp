@@ -15,6 +15,7 @@ import {
 import { Star } from "lucide-react";
 import { Order } from "@/types";
 import { reviewAndPay } from "./actions";
+import { getCardById } from "@/lib/cat-photo-cards";
 
 function StarRating({
   value,
@@ -100,22 +101,28 @@ export function ReviewDialog({
             )}
           </div>
 
-          {/* 照片占位 */}
+          {/* 照片墙 */}
           <div className="space-y-2">
             <p className="text-sm font-medium">服务照片</p>
-            <div className="grid grid-cols-3 gap-2">
-              {(order.feedbackPhotos && order.feedbackPhotos.length > 0
-                ? order.feedbackPhotos
-                : ["mock-1", "mock-2"]
-              ).map((id) => (
-                <div
-                  key={id}
-                  className="aspect-square rounded-md bg-muted flex items-center justify-center text-xs text-muted-foreground"
-                >
-                  照片
-                </div>
-              ))}
-            </div>
+            {order.feedbackPhotos && order.feedbackPhotos.length > 0 ? (
+              <div className="grid grid-cols-3 gap-2">
+                {order.feedbackPhotos.map((id) => {
+                  const card = getCardById(id);
+                  if (!card) return null;
+                  return (
+                    <div
+                      key={id}
+                      className={`aspect-square rounded-md flex flex-col items-center justify-center gap-1 ${card.bg}`}
+                    >
+                      <span className="text-3xl">{card.emoji}</span>
+                      <span className="text-xs font-medium">{card.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground italic">暂无服务照片</p>
+            )}
           </div>
 
           {/* 评价 */}

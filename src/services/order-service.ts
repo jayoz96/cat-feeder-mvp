@@ -1,5 +1,6 @@
-import { Order, CreateOrderInput, CheckIn } from "@/types";
+import { Order, CreateOrderInput, CheckIn, Coordinates } from "@/types";
 import { MOCK_ORDERS } from "./mock-data";
+import { haversineDistance } from "@/lib/distance";
 
 // 使用 globalThis 确保开发模式下模块重载时数据不丢失
 const STORE_VERSION = MOCK_ORDERS.length;
@@ -58,6 +59,19 @@ export const OrderService = {
   getPendingOrders(): Order[] {
     autoCompleteExpired();
     return getStore().filter((o) => o.status === "pending");
+  },
+
+  /** 按距离排序的待接订单，返回 [order, distanceKm] 元组 */
+  getPendingOrdersSorted(feederLocation: Coordinates): [Order, number][] {
+    const pending = this.getPendingOrders();
+    return pending
+      .map((order): [Order, number] => {
+        const dist = order.location
+          ? haversineDistance(feederLocation, order.location)
+          : Infinity;
+        return [order, dist];
+      })
+      .sort((a, b) => a[1] - b[1]);
   },
 
   getOrderById(orderId: string): Order | null {
@@ -141,6 +155,15 @@ export const OrderService = {
     if (!order.checkIns) order.checkIns = [];
     order.checkIns.push(checkIn);
     return checkIn;
+  },
+
+  deleteOrder(orderId: string, userId: string): boolean {
+    const store = getStore();
+    const order = store.find((o) => o.id === orderId);
+    if (!order || order.userId !== userId) return false;
+
+    setStore(store.filter((o) => o.id !== orderId));
+    return true;
   },
 
   reviewAndPay(orderId: string, rating?: number, comment?: string): Order | null {

@@ -9,6 +9,7 @@ import { Order } from "@/types";
 import { CatAvatar } from "@/components/features/cat-avatar";
 import { NavButton } from "@/components/features/nav-button";
 import { acceptOrder } from "./actions";
+import { formatDistance } from "@/lib/distance";
 import Link from "next/link";
 
 /** 简单的 AI 推荐逻辑：猫多、价格高、日期近的订单优先推荐 */
@@ -19,7 +20,7 @@ function isAiRecommended(order: Order): boolean {
   return order.catCount >= 2 || order.totalPrice >= 300 || daysUntilStart <= 5;
 }
 
-export function PendingOrderCard({ order }: { order: Order }) {
+export function PendingOrderCard({ order, distanceKm }: { order: Order; distanceKm?: number }) {
   const router = useRouter();
 
   async function handleAccept() {
@@ -71,6 +72,11 @@ export function PendingOrderCard({ order }: { order: Order }) {
             <p className="flex items-center gap-1.5">
               <MapPin className="h-3.5 w-3.5" />
               {order.address}
+              {distanceKm != null && distanceKm !== Infinity && (
+                <span className="inline-flex items-center rounded-full bg-emerald-100 text-emerald-700 px-1.5 py-0.5 text-[11px] font-medium whitespace-nowrap">
+                  距你 {formatDistance(distanceKm)}
+                </span>
+              )}
             </p>
             <NavButton address={order.address} />
           </div>

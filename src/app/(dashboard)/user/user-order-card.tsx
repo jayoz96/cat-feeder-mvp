@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Zap } from "lucide-react";
@@ -8,9 +9,24 @@ import { Order } from "@/types";
 import { CatAvatar } from "@/components/features/cat-avatar";
 import { OrderStatusBadge } from "./order-status-badge";
 import { ReviewDialog } from "./review-dialog";
+import { deleteOrder } from "./actions";
 
 export function UserOrderCard({ order }: { order: Order }) {
   const [showReview, setShowReview] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
+
+  function handleDelete() {
+    if (!confirm("确定要删除这个订单吗？")) return;
+    startTransition(async () => {
+      const result = await deleteOrder(order.id);
+      if (result.success) {
+        router.refresh();
+      } else {
+        alert(result.message);
+      }
+    });
+  }
 
   return (
     <>
@@ -30,7 +46,16 @@ export function UserOrderCard({ order }: { order: Order }) {
                   </span>
                 )}
               </div>
-              <OrderStatusBadge status={order.status} />
+              <div className="flex flex-col items-end gap-1">
+                <OrderStatusBadge status={order.status} />
+                <button
+                  className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors disabled:opacity-50"
+                  disabled={isPending}
+                  onClick={handleDelete}
+                >
+                  {isPending ? "删除中..." : "删除订单"}
+                </button>
+              </div>
             </div>
           </div>
         </CardHeader>

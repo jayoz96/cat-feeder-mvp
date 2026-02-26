@@ -1,4 +1,18 @@
-import { Order, User, CatProfile, Review } from "@/types";
+import { Order, User, CatProfile, Review, Coordinates } from "@/types";
+
+// 地址对应的坐标（南京江宁区各小区）
+const ADDRESS_COORDS: Record<string, Coordinates> = {
+  "南京市江宁区东山街道万达广场2栋1403": { lat: 31.9535, lng: 118.8395 },
+  "南京市江宁区百家湖花园12栋502": { lat: 31.9340, lng: 118.8280 },
+  "南京市江宁区翠屏山小区7栋301": { lat: 31.9420, lng: 118.8150 },
+  "南京市江宁区义乌小商品城旁金轮新都汇8栋1201": { lat: 31.9580, lng: 118.8450 },
+  "南京市江宁区九龙湖国际企业总部园6栋": { lat: 31.9100, lng: 118.8600 },
+  "南京市江宁区天元中路99号武夷绿洲3栋801": { lat: 31.9480, lng: 118.8320 },
+  "南京市江宁区将军大道22号翠屏国际城5栋1602": { lat: 31.9380, lng: 118.8100 },
+  "南京市江宁区秣陵街道殷巷新寓12栋203": { lat: 31.9200, lng: 118.8500 },
+  "南京市江宁区科学园龙眠大道568号同曦鸣城9栋1101": { lat: 31.9150, lng: 118.8350 },
+  "南京市江宁区岔路口大街世纪东山花园7栋405": { lat: 31.9560, lng: 118.8420 },
+};
 
 // Mock 用户数据
 export const MOCK_USERS: User[] = [
@@ -9,6 +23,7 @@ export const MOCK_USERS: User[] = [
     role: "user",
     address: "南京市江宁区东山街道万达广场",
     savedAddresses: ["南京市江宁区东山街道万达广场2栋1403", "南京市江宁区义乌小商品城旁金轮新都汇8栋1201"],
+    location: { lat: 31.9535, lng: 118.8395 },
     rating: 4.8,
     createdAt: "2026-01-15",
   },
@@ -19,6 +34,7 @@ export const MOCK_USERS: User[] = [
     role: "user",
     address: "南京市江宁区百家湖花园",
     savedAddresses: ["南京市江宁区百家湖花园12栋502"],
+    location: { lat: 31.9340, lng: 118.8280 },
     rating: 4.6,
     createdAt: "2026-01-20",
   },
@@ -29,6 +45,7 @@ export const MOCK_USERS: User[] = [
     role: "user",
     address: "南京市江宁区翠屏山小区",
     savedAddresses: ["南京市江宁区翠屏山小区7栋301"],
+    location: { lat: 31.9420, lng: 118.8150 },
     rating: 4.9,
     createdAt: "2026-02-01",
   },
@@ -42,6 +59,7 @@ export const MOCK_USERS: User[] = [
     totalOrders: 128,
     bio: "资深铲屎官，养猫5年，擅长应对各种性格的猫咪。持有宠物护理证书。",
     serviceArea: "江宁区",
+    location: { lat: 31.9450, lng: 118.8300 },
     createdAt: "2026-01-10",
   },
 ];
@@ -80,6 +98,14 @@ const NOTES_LIST = [
 
 const USER_IDS = ["user-1", "user-2", "user-3"];
 const STATUSES: Order["status"][] = ["pending", "accepted", "in_progress", "pending_review", "paid"];
+
+// 预设照片卡片组合，给 pending_review 订单用
+const PHOTO_CARD_SETS = [
+  ["eating", "drinking", "sleeping"],
+  ["eating", "litter", "cuddling", "relaxing"],
+  ["playing", "grooming", "eating", "drinking"],
+  ["eating", "sleeping", "exploring"],
+];
 
 function generateOrders(): Order[] {
   const orders: Order[] = [];
@@ -125,6 +151,9 @@ function generateOrders(): Order[] {
     const multiplier = urgent ? 1.5 : 1;
     const totalPrice = Math.round(days * 50 * catCount * multiplier);
 
+    const address = ADDRESSES[(i - 1) % ADDRESSES.length];
+    const location = ADDRESS_COORDS[address];
+
     orders.push({
       id: `order-${i}`,
       userId,
@@ -134,7 +163,8 @@ function generateOrders(): Order[] {
       startDate: `2026-03-${String(startDay).padStart(2, "0")}`,
       endDate: `2026-03-${String(endDay).padStart(2, "0")}`,
       notes: NOTES_LIST[(i - 1) % NOTES_LIST.length],
-      address: ADDRESSES[(i - 1) % ADDRESSES.length],
+      address,
+      location,
       urgent: urgent || undefined,
       pricePerDay: 50,
       totalPrice,
@@ -142,6 +172,7 @@ function generateOrders(): Order[] {
       acceptedAt,
       completedAt,
       feedbackNote,
+      feedbackPhotos: status === "pending_review" ? PHOTO_CARD_SETS[(i - 27) % PHOTO_CARD_SETS.length] : undefined,
     });
   }
   return orders;

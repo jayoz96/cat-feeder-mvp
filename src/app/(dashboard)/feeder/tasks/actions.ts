@@ -25,7 +25,8 @@ export async function startTask(orderId: string): Promise<ActionResult> {
 
 export async function completeTask(
   orderId: string,
-  feedbackNote: string
+  feedbackNote: string,
+  photoCardIds?: string[]
 ): Promise<ActionResult> {
   if (!orderId) {
     return { success: false, message: "订单ID无效" };
@@ -40,7 +41,7 @@ export async function completeTask(
 
   const order = OrderService.completeOrder(orderId, {
     note: feedbackNote,
-    photos: ["mock-photo-1.jpg", "mock-photo-2.jpg"],
+    photos: photoCardIds && photoCardIds.length > 0 ? photoCardIds : [],
   });
 
   if (!order) {

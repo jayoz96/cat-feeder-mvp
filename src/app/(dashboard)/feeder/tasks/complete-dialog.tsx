@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +11,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { ImagePlus } from "lucide-react";
+import { CAT_PHOTO_CARDS, CatPhotoCard } from "@/lib/cat-photo-cards";
 import { completeTask } from "./actions";
 
 export function CompleteDialog({
@@ -26,12 +25,19 @@ export function CompleteDialog({
 }) {
   const router = useRouter();
   const [note, setNote] = useState("");
+  const [selectedCards, setSelectedCards] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+
+  function toggleCard(id: string) {
+    setSelectedCards((prev) =>
+      prev.includes(id) ? prev.filter((c) => c !== id) : prev.length < 6 ? [...prev, id] : prev
+    );
+  }
 
   async function handleSubmit() {
     setLoading(true);
     try {
-      const result = await completeTask(orderId, note);
+      const result = await completeTask(orderId, note, selectedCards);
       if (result.success) {
         toast.success(result.message);
         onOpenChange(false);
@@ -54,25 +60,30 @@ export function CompleteDialog({
         </DialogHeader>
 
         <div className="space-y-4 py-2">
-          {/* 照片上传占位 */}
+          {/* 猫咪状态卡片选择器 */}
           <div>
-            <label className="text-sm font-medium">上传照片</label>
+            <label className="text-sm font-medium">
+              选择猫咪状态（最多6张，已选 {selectedCards.length}）
+            </label>
             <div className="mt-1.5 grid grid-cols-3 gap-2">
-              {["mock-1", "mock-2"].map((id) => (
-                <div
-                  key={id}
-                  className="aspect-square rounded-md bg-muted flex items-center justify-center text-xs text-muted-foreground"
-                >
-                  已上传
-                </div>
-              ))}
-              <button
-                type="button"
-                className="aspect-square rounded-md border-2 border-dashed border-muted-foreground/25 flex flex-col items-center justify-center text-muted-foreground hover:border-muted-foreground/50 transition-colors"
-              >
-                <ImagePlus className="h-5 w-5" />
-                <span className="text-xs mt-1">添加</span>
-              </button>
+              {CAT_PHOTO_CARDS.map((card) => {
+                const selected = selectedCards.includes(card.id);
+                return (
+                  <button
+                    key={card.id}
+                    type="button"
+                    onClick={() => toggleCard(card.id)}
+                    className={`aspect-square rounded-md flex flex-col items-center justify-center gap-1 transition-all ${card.bg} ${
+                      selected
+                        ? "ring-2 ring-primary ring-offset-1 scale-95"
+                        : "opacity-70 hover:opacity-100"
+                    }`}
+                  >
+                    <span className="text-2xl">{card.emoji}</span>
+                    <span className="text-xs font-medium">{card.label}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 

@@ -8,6 +8,22 @@ export interface ActionResult {
   message: string;
 }
 
+export async function deleteOrder(orderId: string): Promise<ActionResult> {
+  if (!orderId) {
+    return { success: false, message: "订单 ID 不能为空" };
+  }
+
+  try {
+    const deleted = OrderService.deleteOrder(orderId, "user-1");
+    if (!deleted) {
+      return { success: false, message: "订单不存在或无法删除" };
+    }
+    return { success: true, message: "订单已删除" };
+  } catch {
+    return { success: false, message: "删除失败，请稍后重试" };
+  }
+}
+
 export async function reviewAndPay(
   orderId: string,
   rating?: number,

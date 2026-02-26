@@ -1,3 +1,9 @@
+// 坐标
+export interface Coordinates {
+  lat: number;
+  lng: number;
+}
+
 // 用户角色枚举
 export type UserRole = "user" | "feeder";
 
@@ -30,6 +36,7 @@ export interface User {
   bio?: string;
   serviceArea?: string;
   savedAddresses?: string[];
+  location?: Coordinates;
   createdAt: string;
 }
 
@@ -68,6 +75,7 @@ export interface Order {
   endDate: string;
   notes: string;
   address: string;
+  location?: Coordinates;
   urgent?: boolean;
   // 费用
   pricePerDay: number;
