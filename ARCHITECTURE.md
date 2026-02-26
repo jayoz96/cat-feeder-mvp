@@ -17,14 +17,17 @@ src/
 │   ├── (auth)/          # 登录注册路由组
 │   ├── (dashboard)/     # 控制台路由组
 │   │   ├── user/        # 铲屎官界面
+│   │   │   └── history/ # 历史订单
 │   │   └── feeder/      # 喂猫员界面
 │   ├── api/             # API Endpoints (如需)
 │   └── layout.tsx       # 全局布局
 ├── components/          # 组件库
 │   ├── ui/              # 基础 UI 组件 (Button, Input, Card)
-│   └── business/        # 业务组件 (OrderCard, FeederProfile)
+│   └── features/        # 业务组件 (OrderCard, FeederProfile)
 ├── lib/                 # 工具函数与配置
 │   ├── utils.ts         # 通用工具
+│   ├── cat-photo-cards.ts # 猫咪状态卡片数据
+│   ├── distance.ts      # Haversine 距离计算
 │   └── db.ts            # 数据库连接
 ├── types/               # TypeScript 类型定义
 └── services/            # 数据服务层 (Mock or DB calls)
