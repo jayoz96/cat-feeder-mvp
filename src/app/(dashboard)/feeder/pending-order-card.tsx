@@ -4,9 +4,9 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Cat, MapPin, Calendar, ClipboardList } from "lucide-react";
-import Link from "next/link";
+import { Cat, MapPin, Calendar } from "lucide-react";
 import { Order } from "@/types";
+import { NavButton } from "@/components/features/nav-button";
 import { acceptOrder } from "./actions";
 
 export function PendingOrderCard({ order }: { order: Order }) {
@@ -39,10 +39,13 @@ export function PendingOrderCard({ order }: { order: Order }) {
             <Calendar className="h-3.5 w-3.5" />
             {order.startDate} ~ {order.endDate}
           </p>
-          <p className="flex items-center gap-1.5">
-            <MapPin className="h-3.5 w-3.5" />
-            {order.address}
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="flex items-center gap-1.5">
+              <MapPin className="h-3.5 w-3.5" />
+              {order.address}
+            </p>
+            <NavButton address={order.address} />
+          </div>
           {order.notes && <p>备注：{order.notes}</p>}
         </div>
         <Button className="w-full" onClick={handleAccept}>

@@ -2,7 +2,8 @@
 export type UserRole = "user" | "feeder";
 
 // 订单状态枚举 - MVP 核心状态机
-export type OrderStatus = "pending" | "accepted" | "in_progress" | "completed";
+// pending → accepted → in_progress → pending_review → paid
+export type OrderStatus = "pending" | "accepted" | "in_progress" | "completed" | "pending_review" | "paid";
 
 // 用户类型
 export interface User {

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Cat, MapPin, Calendar, Play, CheckCircle } from "lucide-react";
 import { Order } from "@/types";
+import { NavButton } from "@/components/features/nav-button";
 import { OrderStatusBadge } from "../../user/order-status-badge";
 import { startTask } from "./actions";
 import { CompleteDialog } from "./complete-dialog";
@@ -49,10 +50,13 @@ export function TaskCard({ order }: { order: Order }) {
               <Calendar className="h-3.5 w-3.5" />
               {order.startDate} ~ {order.endDate}
             </p>
-            <p className="flex items-center gap-1.5">
-              <MapPin className="h-3.5 w-3.5" />
-              {order.address}
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="flex items-center gap-1.5">
+                <MapPin className="h-3.5 w-3.5" />
+                {order.address}
+              </p>
+              <NavButton address={order.address} />
+            </div>
             {order.notes && <p>备注：{order.notes}</p>}
             {order.feedbackNote && (
               <p className="pt-1 text-foreground">反馈：{order.feedbackNote}</p>

@@ -1,26 +1,40 @@
 import { Order, CreateOrderInput } from "@/types";
 import { MOCK_ORDERS } from "./mock-data";
 
-// 内存中的订单存储（MVP 用，重启会丢失）
-let orders: Order[] = [...MOCK_ORDERS];
+// 使用 globalThis 确保开发模式下模块重载时数据不丢失
+const globalForOrders = globalThis as unknown as {
+  __orders?: Order[];
+};
+
+if (!globalForOrders.__orders) {
+  globalForOrders.__orders = [...MOCK_ORDERS];
+}
+
+function getStore(): Order[] {
+  return globalForOrders.__orders!;
+}
+
+function setStore(orders: Order[]) {
+  globalForOrders.__orders = orders;
+}
 
 const PRICE_PER_DAY = 50;
 
 export const OrderService = {
   getOrders(): Order[] {
-    return orders;
+    return getStore();
   },
 
   getOrdersByUser(userId: string): Order[] {
-    return orders.filter((o) => o.userId === userId);
+    return getStore().filter((o) => o.userId === userId);
   },
 
   getOrdersByStatus(status: Order["status"]): Order[] {
-    return orders.filter((o) => o.status === status);
+    return getStore().filter((o) => o.status === status);
   },
 
   getPendingOrders(): Order[] {
-    return orders.filter((o) => o.status === "pending");
+    return getStore().filter((o) => o.status === "pending");
   },
 
   createOrder(input: CreateOrderInput, userId: string): Order {
@@ -42,12 +56,12 @@ export const OrderService = {
       createdAt: new Date().toISOString().split("T")[0],
     };
 
-    orders = [order, ...orders];
+    setStore([order, ...getStore()]);
     return order;
   },
 
   acceptOrder(orderId: string, feederId: string): Order | null {
-    const order = orders.find((o) => o.id === orderId);
+    const order = getStore().find((o) => o.id === orderId);
     if (!order || order.status !== "pending") return null;
 
     order.status = "accepted";
@@ -57,7 +71,7 @@ export const OrderService = {
   },
 
   startOrder(orderId: string): Order | null {
-    const order = orders.find((o) => o.id === orderId);
+    const order = getStore().find((o) => o.id === orderId);
     if (!order || order.status !== "accepted") return null;
 
     order.status = "in_progress";
@@ -68,15 +82,23 @@ export const OrderService = {
     orderId: string,
     feedback?: { note: string; photos: string[] }
   ): Order | null {
-    const order = orders.find((o) => o.id === orderId);
+    const order = getStore().find((o) => o.id === orderId);
     if (!order || (order.status !== "accepted" && order.status !== "in_progress")) return null;
 
-    order.status = "completed";
+    order.status = "pending_review";
     order.completedAt = new Date().toISOString();
     if (feedback) {
       order.feedbackNote = feedback.note;
       order.feedbackPhotos = feedback.photos;
     }
+    return order;
+  },
+
+  reviewAndPay(orderId: string): Order | null {
+    const order = getStore().find((o) => o.id === orderId);
+    if (!order || order.status !== "pending_review") return null;
+
+    order.status = "paid";
     return order;
   },
 };

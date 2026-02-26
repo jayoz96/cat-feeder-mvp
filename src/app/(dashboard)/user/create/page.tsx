@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Cat } from "lucide-react";
+import { AddressPicker } from "@/components/features/address-picker";
 import Link from "next/link";
 import { submitOrder } from "./actions";
 
@@ -132,10 +133,10 @@ export default function CreateOrderPage() {
         </div>
 
         <FormField label="服务地址" error={errors.address}>
-          <Input
-            placeholder="请输入详细地址"
+          <AddressPicker
+            placeholder="搜索或输入详细地址"
             value={form.address}
-            onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
+            onChange={(val) => setForm((f) => ({ ...f, address: val }))}
           />
         </FormField>
 

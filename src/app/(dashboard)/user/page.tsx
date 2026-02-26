@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PlusCircle } from "lucide-react";
 import { OrderService } from "@/services/order-service";
-import { OrderStatusBadge } from "./order-status-badge";
+import { UserOrderCard } from "./user-order-card";
 
 export default function UserPage() {
   const orders = OrderService.getOrdersByUser("user-1");
@@ -27,21 +26,7 @@ export default function UserPage() {
       ) : (
         <div className="space-y-3">
           {orders.map((order) => (
-            <Card key={order.id}>
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base">
-                    {order.catCount} 只猫 · {order.startDate} ~ {order.endDate}
-                  </CardTitle>
-                  <OrderStatusBadge status={order.status} />
-                </div>
-              </CardHeader>
-              <CardContent className="text-sm text-muted-foreground space-y-1">
-                <p>{order.address}</p>
-                {order.notes && <p>备注：{order.notes}</p>}
-                <p className="font-medium text-foreground">¥{order.totalPrice}</p>
-              </CardContent>
-            </Card>
+            <UserOrderCard key={order.id} order={order} />
           ))}
         </div>
       )}
