@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Cat, MapPin, Calendar, Play, CheckCircle } from "lucide-react";
+import { Cat, MapPin, Calendar, Play, CheckCircle, Clock } from "lucide-react";
 import { Order } from "@/types";
 import { CatAvatar } from "@/components/features/cat-avatar";
 import { NavButton } from "@/components/features/nav-button";
@@ -65,6 +65,23 @@ export function TaskCard({ order }: { order: Order }) {
               <p className="pt-1 text-foreground">反馈：{order.feedbackNote}</p>
             )}
           </div>
+
+          {/* 打卡记录 */}
+          {order.checkIns && order.checkIns.length > 0 && (
+            <div className="border-t pt-2 space-y-1.5">
+              <p className="text-xs font-medium text-foreground">打卡记录</p>
+              {order.checkIns.map((ci) => (
+                <div key={ci.id} className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Clock className="h-3 w-3" />
+                  <span className={ci.type === "arrive" ? "text-green-600" : "text-blue-600"}>
+                    {ci.type === "arrive" ? "到达" : "离开"}
+                  </span>
+                  <span>{new Date(ci.createdAt).toLocaleTimeString()}</span>
+                  {ci.note && <span>· {ci.note}</span>}
+                </div>
+              ))}
+            </div>
+          )}
 
           {order.status === "accepted" && (
             <Button className="w-full" onClick={handleStart} disabled={loading}>

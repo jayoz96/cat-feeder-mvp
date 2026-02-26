@@ -6,10 +6,15 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Cat } from "lucide-react";
+import { ArrowLeft, Cat, Zap, MapPin } from "lucide-react";
 import { AddressPicker } from "@/components/features/address-picker";
 import Link from "next/link";
 import { submitOrder } from "./actions";
+
+const SAVED_ADDRESSES = [
+  "南京市江宁区东山街道万达广场2栋1403",
+  "南京市江宁区义乌小商品城旁金轮新都汇8栋1201",
+];
 
 export default function CreateOrderPage() {
   const router = useRouter();
@@ -21,6 +26,7 @@ export default function CreateOrderPage() {
     endDate: "",
     notes: "",
     address: "",
+    urgent: false,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -76,7 +82,8 @@ export default function CreateOrderPage() {
             (1000 * 60 * 60 * 24)
         ) + 1)
       : 0;
-  const estimatedPrice = days * 50 * form.catCount;
+  const basePrice = days * 50 * form.catCount;
+  const estimatedPrice = form.urgent ? Math.round(basePrice * 1.5) : basePrice;
 
   return (
     <div className="max-w-lg mx-auto space-y-6">
@@ -133,6 +140,25 @@ export default function CreateOrderPage() {
         </div>
 
         <FormField label="服务地址" error={errors.address}>
+          {SAVED_ADDRESSES.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-2">
+              {SAVED_ADDRESSES.map((addr) => (
+                <button
+                  key={addr}
+                  type="button"
+                  onClick={() => setForm((f) => ({ ...f, address: addr }))}
+                  className={`inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-full border transition-colors ${
+                    form.address === addr
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-muted hover:bg-muted/80 border-transparent"
+                  }`}
+                >
+                  <MapPin className="h-3 w-3" />
+                  {addr.length > 20 ? addr.slice(-20) : addr}
+                </button>
+              ))}
+            </div>
+          )}
           <AddressPicker
             placeholder="搜索或输入详细地址"
             value={form.address}
@@ -149,6 +175,25 @@ export default function CreateOrderPage() {
           />
         </FormField>
 
+        {/* 紧急订单开关 */}
+        <div
+          className={`flex items-center justify-between rounded-lg border p-3 cursor-pointer transition-colors ${
+            form.urgent ? "border-orange-400 bg-orange-50" : ""
+          }`}
+          onClick={() => setForm((f) => ({ ...f, urgent: !f.urgent }))}
+        >
+          <div className="flex items-center gap-2">
+            <Zap className={`h-4 w-4 ${form.urgent ? "text-orange-500" : "text-muted-foreground"}`} />
+            <div>
+              <p className="text-sm font-medium">紧急订单</p>
+              <p className="text-xs text-muted-foreground">加价 50%，优先展示给喂猫员</p>
+            </div>
+          </div>
+          <div className={`h-5 w-9 rounded-full transition-colors ${form.urgent ? "bg-orange-500" : "bg-muted"} relative`}>
+            <div className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${form.urgent ? "translate-x-4" : "translate-x-0.5"}`} />
+          </div>
+        </div>
+
         {days > 0 && (
           <Card>
             <CardHeader className="pb-2">
@@ -158,6 +203,9 @@ export default function CreateOrderPage() {
               <p>服务天数：{days} 天</p>
               <p>猫咪数量：{form.catCount} 只</p>
               <p>单价：¥50 / 天 / 只</p>
+              {form.urgent && (
+                <p className="text-orange-500">紧急加价：×1.5</p>
+              )}
               <p className="text-lg font-bold text-foreground pt-1">
                 合计：¥{estimatedPrice}
               </p>

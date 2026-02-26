@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Cat } from "lucide-react";
 import { OrderService } from "@/services/order-service";
 import { UserOrderCard } from "./user-order-card";
 
@@ -13,12 +13,20 @@ export default function UserPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">我的订单</h1>
-        <Link href="/user/create">
-          <Button>
-            <PlusCircle className="h-4 w-4 mr-2" />
-            发布需求
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/user/cats">
+            <Button variant="outline" size="sm">
+              <Cat className="h-4 w-4 mr-1" />
+              猫咪档案
+            </Button>
+          </Link>
+          <Link href="/user/create">
+            <Button size="sm">
+              <PlusCircle className="h-4 w-4 mr-1" />
+              发布需求
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {orders.length === 0 ? (

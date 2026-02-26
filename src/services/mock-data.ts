@@ -1,4 +1,4 @@
-import { Order, User } from "@/types";
+import { Order, User, CatProfile, Review } from "@/types";
 
 // Mock 用户数据
 export const MOCK_USERS: User[] = [
@@ -8,6 +8,7 @@ export const MOCK_USERS: User[] = [
     phone: "138****1234",
     role: "user",
     address: "南京市江宁区东山街道万达广场",
+    savedAddresses: ["南京市江宁区东山街道万达广场2栋1403", "南京市江宁区义乌小商品城旁金轮新都汇8栋1201"],
     rating: 4.8,
     createdAt: "2026-01-15",
   },
@@ -17,6 +18,7 @@ export const MOCK_USERS: User[] = [
     phone: "136****9012",
     role: "user",
     address: "南京市江宁区百家湖花园",
+    savedAddresses: ["南京市江宁区百家湖花园12栋502"],
     rating: 4.6,
     createdAt: "2026-01-20",
   },
@@ -26,6 +28,7 @@ export const MOCK_USERS: User[] = [
     phone: "137****3456",
     role: "user",
     address: "南京市江宁区翠屏山小区",
+    savedAddresses: ["南京市江宁区翠屏山小区7栋301"],
     rating: 4.9,
     createdAt: "2026-02-01",
   },
@@ -36,6 +39,9 @@ export const MOCK_USERS: User[] = [
     role: "feeder",
     avatar: "",
     rating: 4.9,
+    totalOrders: 128,
+    bio: "资深铲屎官，养猫5年，擅长应对各种性格的猫咪。持有宠物护理证书。",
+    serviceArea: "江宁区",
     createdAt: "2026-01-10",
   },
 ];
@@ -111,5 +117,63 @@ export const MOCK_ORDERS: Order[] = [
     pricePerDay: 50,
     totalPrice: 200,
     createdAt: "2026-02-23",
+  },
+];
+
+// Mock 猫咪档案
+export const MOCK_CATS: CatProfile[] = [
+  {
+    id: "cat-1",
+    ownerId: "user-1",
+    name: "大橘",
+    breed: "英短",
+    age: 3,
+    personality: "温顺亲人，喜欢被摸下巴",
+    dietNotes: "只吃干粮，每天一次，一次50g",
+  },
+  {
+    id: "cat-2",
+    ownerId: "user-1",
+    name: "小白",
+    breed: "英短",
+    age: 2,
+    personality: "胆小怕生，进门后会躲起来",
+    dietNotes: "干粮为主，偶尔加罐头",
+  },
+  {
+    id: "cat-3",
+    ownerId: "user-2",
+    name: "布丁",
+    breed: "布偶",
+    age: 1,
+    personality: "粘人，喜欢跟着人走",
+    dietNotes: "湿粮+干粮混喂，猫粮在厨房柜子里",
+  },
+  {
+    id: "cat-4",
+    ownerId: "user-3",
+    name: "橘一",
+    breed: "橘猫",
+    age: 4,
+    personality: "贪吃，饭量大",
+    dietNotes: "干粮湿粮各一顿，控制食量",
+  },
+  {
+    id: "cat-5",
+    ownerId: "user-3",
+    name: "橘二",
+    breed: "橘猫",
+    age: 3,
+    personality: "活泼好动，喜欢逗猫棒",
+    dietNotes: "同橘一",
+  },
+  {
+    id: "cat-6",
+    ownerId: "user-3",
+    name: "橘三",
+    breed: "橘猫",
+    age: 2,
+    personality: "安静，喜欢晒太阳",
+    dietNotes: "同橘一",
   },
 ];

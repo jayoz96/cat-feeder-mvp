@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ClipboardList } from "lucide-react";
+import { ClipboardList, User } from "lucide-react";
 import { OrderService } from "@/services/order-service";
 import { PendingOrderCard } from "./pending-order-card";
 
@@ -13,12 +13,20 @@ export default function FeederPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">接单大厅</h1>
-        <Link href="/feeder/tasks">
-          <Button variant="outline">
-            <ClipboardList className="h-4 w-4 mr-2" />
-            我的任务
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/feeder/profile">
+            <Button variant="outline" size="sm">
+              <User className="h-4 w-4 mr-1" />
+              个人主页
+            </Button>
+          </Link>
+          <Link href="/feeder/tasks">
+            <Button variant="outline" size="sm">
+              <ClipboardList className="h-4 w-4 mr-1" />
+              我的任务
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {pendingOrders.length === 0 ? (

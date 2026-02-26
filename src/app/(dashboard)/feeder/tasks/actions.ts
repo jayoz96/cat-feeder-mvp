@@ -17,6 +17,9 @@ export async function startTask(orderId: string): Promise<ActionResult> {
     return { success: false, message: "操作失败，请确认订单状态" };
   }
 
+  // 记录到达打卡
+  OrderService.addCheckIn(orderId, "feeder-1", "arrive", "已到达，开始服务");
+
   return { success: true, message: "已签到，开始服务！" };
 }
 
@@ -31,6 +34,9 @@ export async function completeTask(
   if (!feedbackNote.trim()) {
     return { success: false, message: "请填写服务反馈" };
   }
+
+  // 记录离开打卡
+  OrderService.addCheckIn(orderId, "feeder-1", "leave", feedbackNote);
 
   const order = OrderService.completeOrder(orderId, {
     note: feedbackNote,

@@ -12,8 +12,38 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Star } from "lucide-react";
 import { Order } from "@/types";
 import { reviewAndPay } from "./actions";
+
+function StarRating({
+  value,
+  onChange,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div className="flex gap-1">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <button
+          key={star}
+          type="button"
+          onClick={() => onChange(star)}
+          className="p-0.5"
+        >
+          <Star
+            className={`h-6 w-6 transition-colors ${
+              star <= value
+                ? "fill-yellow-400 text-yellow-400"
+                : "text-muted-foreground/30"
+            }`}
+          />
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export function ReviewDialog({
   open,
@@ -26,11 +56,13 @@ export function ReviewDialog({
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
 
   async function handlePay(method: string) {
     setLoading(true);
     try {
-      const result = await reviewAndPay(order.id);
+      const result = await reviewAndPay(order.id, rating, comment);
       if (result.success) {
         toast.success(`${method}支付成功，订单已完结`);
         onOpenChange(false);
@@ -84,6 +116,22 @@ export function ReviewDialog({
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* 评价 */}
+          <div className="space-y-2">
+            <p className="text-sm font-medium">服务评分</p>
+            <StarRating value={rating} onChange={setRating} />
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-sm font-medium">评价留言（选填）</p>
+            <textarea
+              className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              placeholder="对喂猫员的服务有什么评价？"
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+            />
           </div>
 
           {/* 费用信息 */}

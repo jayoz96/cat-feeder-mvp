@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Cat, MapPin, Calendar, Sparkles } from "lucide-react";
+import { Cat, MapPin, Calendar, Sparkles, Zap } from "lucide-react";
 import { Order } from "@/types";
 import { CatAvatar } from "@/components/features/cat-avatar";
 import { NavButton } from "@/components/features/nav-button";
@@ -44,6 +44,12 @@ export function PendingOrderCard({ order }: { order: Order }) {
               <CardTitle className="text-base">
                 {order.catCount} 只猫
               </CardTitle>
+              {order.urgent && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 text-orange-700 px-2 py-0.5 text-[11px] font-medium">
+                  <Zap className="h-3 w-3" />
+                  加急
+                </span>
+              )}
               {recommended && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 text-violet-700 px-2 py-0.5 text-[11px] font-medium">
                   <Sparkles className="h-3 w-3" />

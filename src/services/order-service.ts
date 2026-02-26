@@ -1,4 +1,4 @@
-import { Order, CreateOrderInput } from "@/types";
+import { Order, CreateOrderInput, CheckIn } from "@/types";
 import { MOCK_ORDERS } from "./mock-data";
 
 // 使用 globalThis 确保开发模式下模块重载时数据不丢失
@@ -19,7 +19,8 @@ function setStore(orders: Order[]) {
 }
 
 const PRICE_PER_DAY = 50;
-const AUTO_COMPLETE_MS = 3 * 60 * 60 * 1000; // 3 小时
+const URGENT_MULTIPLIER = 1.5;
+const AUTO_COMPLETE_MS = 3 * 60 * 60 * 1000;
 
 /** 懒检查：pending_review 超过 3 小时自动转 paid */
 function autoCompleteExpired() {
@@ -65,18 +66,22 @@ export const OrderService = {
     const start = new Date(input.startDate);
     const end = new Date(input.endDate);
     const days = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+    const multiplier = input.urgent ? URGENT_MULTIPLIER : 1;
+    const totalPrice = Math.round(days * PRICE_PER_DAY * input.catCount * multiplier);
 
     const order: Order = {
       id: `order-${Date.now()}`,
       userId,
       status: "pending",
       catCount: input.catCount,
+      catIds: input.catIds,
       startDate: input.startDate,
       endDate: input.endDate,
       notes: input.notes,
       address: input.address,
+      urgent: input.urgent,
       pricePerDay: PRICE_PER_DAY,
-      totalPrice: days * PRICE_PER_DAY * input.catCount,
+      totalPrice,
       createdAt: new Date().toISOString().split("T")[0],
     };
 
@@ -118,11 +123,30 @@ export const OrderService = {
     return order;
   },
 
-  reviewAndPay(orderId: string): Order | null {
+  addCheckIn(orderId: string, feederId: string, type: "arrive" | "leave", note?: string): CheckIn | null {
+    const order = getStore().find((o) => o.id === orderId);
+    if (!order) return null;
+
+    const checkIn: CheckIn = {
+      id: `checkin-${Date.now()}`,
+      orderId,
+      feederId,
+      type,
+      note,
+      createdAt: new Date().toISOString(),
+    };
+    if (!order.checkIns) order.checkIns = [];
+    order.checkIns.push(checkIn);
+    return checkIn;
+  },
+
+  reviewAndPay(orderId: string, rating?: number, comment?: string): Order | null {
     const order = getStore().find((o) => o.id === orderId);
     if (!order || order.status !== "pending_review") return null;
 
     order.status = "paid";
+    if (rating) order.userRating = rating;
+    if (comment) order.reviewComment = comment;
     return order;
   },
 };
