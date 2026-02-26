@@ -2,12 +2,15 @@ import { Order, CreateOrderInput, CheckIn } from "@/types";
 import { MOCK_ORDERS } from "./mock-data";
 
 // 使用 globalThis 确保开发模式下模块重载时数据不丢失
+const STORE_VERSION = MOCK_ORDERS.length;
 const globalForOrders = globalThis as unknown as {
   __orders?: Order[];
+  __ordersVersion?: number;
 };
 
-if (!globalForOrders.__orders) {
+if (!globalForOrders.__orders || globalForOrders.__ordersVersion !== STORE_VERSION) {
   globalForOrders.__orders = [...MOCK_ORDERS];
+  globalForOrders.__ordersVersion = STORE_VERSION;
 }
 
 function getStore(): Order[] {
