@@ -5,9 +5,15 @@ import { Button } from "@/components/ui/button";
 import { ClipboardList, User } from "lucide-react";
 import { OrderService } from "@/services/order-service";
 import { PendingOrderCard } from "./pending-order-card";
+import { Pagination } from "@/components/features/pagination";
 
-export default function FeederPage() {
-  const pendingOrders = OrderService.getPendingOrders();
+const PAGE_SIZE = 5;
+
+export default async function FeederPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
+  const { page } = await searchParams;
+  const current = Math.max(1, Number(page) || 1);
+  const allPending = OrderService.getPendingOrders();
+  const pendingOrders = allPending.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
 
   return (
     <div className="space-y-6">
@@ -29,16 +35,19 @@ export default function FeederPage() {
         </div>
       </div>
 
-      {pendingOrders.length === 0 ? (
+      {allPending.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           <p>暂无可接订单，稍后再来看看吧</p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {pendingOrders.map((order) => (
-            <PendingOrderCard key={order.id} order={order} />
-          ))}
-        </div>
+        <>
+          <div className="space-y-3">
+            {pendingOrders.map((order) => (
+              <PendingOrderCard key={order.id} order={order} />
+            ))}
+          </div>
+          <Pagination total={allPending.length} pageSize={PAGE_SIZE} basePath="/feeder" />
+        </>
       )}
     </div>
   );

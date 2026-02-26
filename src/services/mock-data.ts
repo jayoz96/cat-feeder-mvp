@@ -46,79 +46,108 @@ export const MOCK_USERS: User[] = [
   },
 ];
 
-// Mock 订单数据
-export const MOCK_ORDERS: Order[] = [
-  {
-    id: "order-1",
-    userId: "user-1",
-    feederId: undefined,
-    status: "pending",
-    catCount: 2,
-    startDate: "2026-03-01",
-    endDate: "2026-03-03",
-    notes: "两只英短，只喂干粮，每天一次",
-    address: "南京市江宁区东山街道万达广场2栋1403",
-    pricePerDay: 50,
-    totalPrice: 300,
-    createdAt: "2026-02-25",
-  },
-  {
-    id: "order-2",
-    userId: "user-2",
-    feederId: undefined,
-    status: "pending",
-    catCount: 1,
-    startDate: "2026-03-05",
-    endDate: "2026-03-07",
-    notes: "布偶猫，需要喂湿粮+铲屎，猫粮在厨房柜子里",
-    address: "南京市江宁区百家湖花园12栋502",
-    pricePerDay: 50,
-    totalPrice: 150,
-    createdAt: "2026-02-25",
-  },
-  {
-    id: "order-3",
-    userId: "user-3",
-    feederId: undefined,
-    status: "pending",
-    catCount: 3,
-    startDate: "2026-03-02",
-    endDate: "2026-03-06",
-    notes: "三只橘猫，饭量大，干粮湿粮各一顿，需要陪玩10分钟",
-    address: "南京市江宁区翠屏山小区7栋301",
-    pricePerDay: 50,
-    totalPrice: 750,
-    createdAt: "2026-02-24",
-  },
-  {
-    id: "order-4",
-    userId: "user-1",
-    feederId: undefined,
-    status: "pending",
-    catCount: 1,
-    startDate: "2026-03-10",
-    endDate: "2026-03-12",
-    notes: "美短，比较胆小，进门动作轻一点",
-    address: "南京市江宁区义乌小商品城旁金轮新都汇8栋1201",
-    pricePerDay: 50,
-    totalPrice: 150,
-    createdAt: "2026-02-24",
-  },
-  {
-    id: "order-5",
-    userId: "user-2",
-    feederId: undefined,
-    status: "pending",
-    catCount: 2,
-    startDate: "2026-03-08",
-    endDate: "2026-03-09",
-    notes: "两只暹罗，每天喂两次，早晚各一次",
-    address: "南京市江宁区九龙湖国际企业总部园6栋",
-    pricePerDay: 50,
-    totalPrice: 200,
-    createdAt: "2026-02-23",
-  },
+// Mock 订单数据 - 生成 50 条
+const ADDRESSES = [
+  "南京市江宁区东山街道万达广场2栋1403",
+  "南京市江宁区百家湖花园12栋502",
+  "南京市江宁区翠屏山小区7栋301",
+  "南京市江宁区义乌小商品城旁金轮新都汇8栋1201",
+  "南京市江宁区九龙湖国际企业总部园6栋",
+  "南京市江宁区天元中路99号武夷绿洲3栋801",
+  "南京市江宁区将军大道22号翠屏国际城5栋1602",
+  "南京市江宁区秣陵街道殷巷新寓12栋203",
+  "南京市江宁区科学园龙眠大道568号同曦鸣城9栋1101",
+  "南京市江宁区岔路口大街世纪东山花园7栋405",
 ];
+
+const NOTES_LIST = [
+  "英短，只喂干粮，每天一次",
+  "布偶猫，需要喂湿粮+铲屎，猫粮在厨房柜子里",
+  "橘猫，饭量大，干粮湿粮各一顿，需要陪玩10分钟",
+  "美短，比较胆小，进门动作轻一点",
+  "暹罗猫，每天喂两次，早晚各一次",
+  "加菲猫，需要擦眼睛，猫粮在客厅柜子上",
+  "蓝猫，喜欢喝流动水，记得开饮水机",
+  "狸花猫，很亲人，喜欢被撸，干粮放阳台",
+  "金渐层，肠胃敏感，只能吃指定猫粮（冰箱里）",
+  "银渐层，需要铲屎+换水，猫砂在卫生间",
+  "缅因猫，体型大食量大，每顿100g干粮",
+  "无毛猫，注意保暖，需要穿衣服，衣服在沙发上",
+  "折耳猫，关节不好，不要让它跳高处",
+  "奶牛猫，精力旺盛，需要用逗猫棒陪玩15分钟",
+  "三花猫，比较高冷，喂完粮就可以走",
+];
+
+const USER_IDS = ["user-1", "user-2", "user-3"];
+const STATUSES: Order["status"][] = ["pending", "accepted", "in_progress", "pending_review", "paid"];
+
+function generateOrders(): Order[] {
+  const orders: Order[] = [];
+  for (let i = 1; i <= 50; i++) {
+    const userId = USER_IDS[i % 3];
+    // 前 20 条 pending（接单大厅），中间 10 条进行中，后 20 条已完成
+    let status: Order["status"];
+    let feederId: string | undefined;
+    let acceptedAt: string | undefined;
+    let completedAt: string | undefined;
+    let feedbackNote: string | undefined;
+
+    if (i <= 20) {
+      status = "pending";
+    } else if (i <= 23) {
+      status = "accepted";
+      feederId = "feeder-1";
+      acceptedAt = "2026-02-25T10:00:00Z";
+    } else if (i <= 26) {
+      status = "in_progress";
+      feederId = "feeder-1";
+      acceptedAt = "2026-02-24T09:00:00Z";
+    } else if (i <= 30) {
+      status = "pending_review";
+      feederId = "feeder-1";
+      acceptedAt = "2026-02-23T08:00:00Z";
+      completedAt = new Date().toISOString();
+      feedbackNote = "猫咪状态良好，已按要求喂食，水也换了新的";
+    } else {
+      status = "paid";
+      feederId = "feeder-1";
+      acceptedAt = `2026-02-${String(Math.max(1, 20 - (i - 30))).padStart(2, "0")}T08:00:00Z`;
+      completedAt = `2026-02-${String(Math.max(1, 21 - (i - 30))).padStart(2, "0")}T17:00:00Z`;
+      feedbackNote = "服务完成，一切正常";
+    }
+
+    const catCount = ((i - 1) % 5) + 1;
+    const startDay = ((i - 1) % 28) + 1;
+    const duration = ((i - 1) % 5) + 1;
+    const endDay = Math.min(startDay + duration, 31);
+    const days = endDay - startDay + 1;
+    const urgent = i % 7 === 0;
+    const multiplier = urgent ? 1.5 : 1;
+    const totalPrice = Math.round(days * 50 * catCount * multiplier);
+
+    orders.push({
+      id: `order-${i}`,
+      userId,
+      feederId,
+      status,
+      catCount,
+      startDate: `2026-03-${String(startDay).padStart(2, "0")}`,
+      endDate: `2026-03-${String(endDay).padStart(2, "0")}`,
+      notes: NOTES_LIST[(i - 1) % NOTES_LIST.length],
+      address: ADDRESSES[(i - 1) % ADDRESSES.length],
+      urgent: urgent || undefined,
+      pricePerDay: 50,
+      totalPrice,
+      createdAt: `2026-02-${String(Math.max(1, 26 - Math.floor(i / 2))).padStart(2, "0")}`,
+      acceptedAt,
+      completedAt,
+      feedbackNote,
+    });
+  }
+  return orders;
+}
+
+export const MOCK_ORDERS: Order[] = generateOrders();
 
 // Mock 猫咪档案
 export const MOCK_CATS: CatProfile[] = [

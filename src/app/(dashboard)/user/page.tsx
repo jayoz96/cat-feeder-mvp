@@ -5,9 +5,15 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle, Cat } from "lucide-react";
 import { OrderService } from "@/services/order-service";
 import { UserOrderCard } from "./user-order-card";
+import { Pagination } from "@/components/features/pagination";
 
-export default function UserPage() {
-  const orders = OrderService.getOrdersByUser("user-1");
+const PAGE_SIZE = 5;
+
+export default async function UserPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
+  const { page } = await searchParams;
+  const current = Math.max(1, Number(page) || 1);
+  const allOrders = OrderService.getOrdersByUser("user-1");
+  const orders = allOrders.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
 
   return (
     <div className="space-y-6">
@@ -29,16 +35,19 @@ export default function UserPage() {
         </div>
       </div>
 
-      {orders.length === 0 ? (
+      {allOrders.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           <p>暂无订单，点击右上角发布喂猫需求吧</p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {orders.map((order) => (
-            <UserOrderCard key={order.id} order={order} />
-          ))}
-        </div>
+        <>
+          <div className="space-y-3">
+            {orders.map((order) => (
+              <UserOrderCard key={order.id} order={order} />
+            ))}
+          </div>
+          <Pagination total={allOrders.length} pageSize={PAGE_SIZE} basePath="/user" />
+        </>
       )}
     </div>
   );
