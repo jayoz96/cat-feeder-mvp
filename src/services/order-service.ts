@@ -56,6 +56,11 @@ export const OrderService = {
     return getStore().filter((o) => o.status === "pending");
   },
 
+  getOrderById(orderId: string): Order | null {
+    autoCompleteExpired();
+    return getStore().find((o) => o.id === orderId) ?? null;
+  },
+
   createOrder(input: CreateOrderInput, userId: string): Order {
     const start = new Date(input.startDate);
     const end = new Date(input.endDate);

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Cat, MapPin, Calendar, Play, CheckCircle } from "lucide-react";
 import { Order } from "@/types";
+import { CatAvatar } from "@/components/features/cat-avatar";
 import { NavButton } from "@/components/features/nav-button";
 import { OrderStatusBadge } from "../../user/order-status-badge";
 import { startTask } from "./actions";
@@ -36,12 +37,14 @@ export function TaskCard({ order }: { order: Order }) {
     <>
       <Card>
         <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base flex items-center gap-1.5">
-              <Cat className="h-4 w-4" />
-              {order.catCount} 只猫 · ¥{order.totalPrice}
-            </CardTitle>
-            <OrderStatusBadge status={order.status} />
+          <div className="flex items-center gap-3">
+            <CatAvatar catCount={order.catCount} />
+            <div className="flex-1 flex items-center justify-between">
+              <CardTitle className="text-base">
+                {order.catCount} 只猫 · ¥{order.totalPrice}
+              </CardTitle>
+              <OrderStatusBadge status={order.status} />
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-2">
