@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Cat, History } from "lucide-react";
+import { PlusCircle, Cat, History, BookOpen } from "lucide-react";
 import { OrderService } from "@/services/order-service";
 import { UserOrderCard } from "./user-order-card";
 import { PendingReviewAlert } from "./pending-review-alert";
@@ -24,6 +24,12 @@ export default async function UserPage({ searchParams }: { searchParams: Promise
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">我的订单</h1>
         <div className="flex gap-2">
+          <Link href="/user/diary">
+            <Button variant="outline" size="sm">
+              <BookOpen className="h-4 w-4 mr-1" />
+              猫咪日记
+            </Button>
+          </Link>
           <Link href="/user/history">
             <Button variant="outline" size="sm">
               <History className="h-4 w-4 mr-1" />

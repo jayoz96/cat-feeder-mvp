@@ -6,7 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Star, MapPin, Calendar, Cat } from "lucide-react";
+import { Star, MapPin, Calendar, Cat, Clock } from "lucide-react";
 import { Order } from "@/types";
 import { getCardById } from "@/lib/cat-photo-cards";
 
@@ -68,6 +68,28 @@ export function OrderDetailDialog({
             <span className="text-sm text-muted-foreground">已支付</span>
             <span className="text-lg font-bold">¥{order.totalPrice}</span>
           </div>
+
+          {/* 服务时间线 */}
+          {order.checkIns && order.checkIns.length > 0 && (
+            <div className="space-y-2 border-t pt-3">
+              <p className="text-sm font-medium">服务时间线</p>
+              <div className="relative pl-5 border-l-2 border-muted space-y-3">
+                {order.checkIns.map((ci) => (
+                  <div key={ci.id} className="relative">
+                    <div className="absolute -left-[25px] top-0.5 h-3 w-3 rounded-full bg-primary border-2 border-background" />
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(ci.createdAt).toLocaleString("zh-CN")}
+                    </p>
+                    <p className="text-sm flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {ci.type === "arrive" ? "到达签到" : "离开签退"}
+                    </p>
+                    {ci.note && <p className="text-xs text-muted-foreground">{ci.note}</p>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* 服务反馈 */}
           <div className="space-y-2 border-t pt-3">

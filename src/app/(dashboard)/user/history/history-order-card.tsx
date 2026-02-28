@@ -1,15 +1,27 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Zap } from "lucide-react";
+import { Zap, RotateCcw } from "lucide-react";
 import { Order } from "@/types";
 import { CatAvatar } from "@/components/features/cat-avatar";
 import { OrderDetailDialog } from "../order-detail-dialog";
 
 export function HistoryOrderCard({ order }: { order: Order }) {
   const [showDetail, setShowDetail] = useState(false);
+  const router = useRouter();
+
+  function handleReorder() {
+    const params = new URLSearchParams({
+      catCount: String(order.catCount),
+      address: order.address,
+      notes: order.notes || "",
+      urgent: String(!!order.urgent),
+    });
+    router.push(`/user/create?${params}`);
+  }
 
   return (
     <>
@@ -39,9 +51,15 @@ export function HistoryOrderCard({ order }: { order: Order }) {
           <p>{order.address}</p>
           <div className="flex items-center justify-between">
             <p className="font-medium text-foreground">¥{order.totalPrice}</p>
-            <Button variant="outline" size="sm" onClick={() => setShowDetail(true)}>
-              查看详情
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={handleReorder}>
+                <RotateCcw className="h-3.5 w-3.5 mr-1" />
+                再来一单
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setShowDetail(true)}>
+                查看详情
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>

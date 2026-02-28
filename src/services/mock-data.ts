@@ -172,7 +172,11 @@ function generateOrders(): Order[] {
       acceptedAt,
       completedAt,
       feedbackNote,
-      feedbackPhotos: status === "pending_review" ? PHOTO_CARD_SETS[(i - 27) % PHOTO_CARD_SETS.length] : undefined,
+      feedbackPhotos: (status === "pending_review" || status === "paid") ? PHOTO_CARD_SETS[(i - 1) % PHOTO_CARD_SETS.length] : undefined,
+      checkIns: (status === "paid" || status === "pending_review") ? [
+        { id: `checkin-${i}-1`, orderId: `order-${i}`, feederId: "feeder-1", type: "arrive" as const, createdAt: `2026-02-${String(Math.max(1, 21 - (i - 30))).padStart(2, "0")}T09:15:00Z` },
+        { id: `checkin-${i}-2`, orderId: `order-${i}`, feederId: "feeder-1", type: "leave" as const, createdAt: `2026-02-${String(Math.max(1, 21 - (i - 30))).padStart(2, "0")}T10:30:00Z` },
+      ] : undefined,
     });
   }
   return orders;

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,16 +17,25 @@ const SAVED_ADDRESSES = [
 ];
 
 export default function CreateOrderPage() {
+  return (
+    <Suspense>
+      <CreateOrderForm />
+    </Suspense>
+  );
+}
+
+function CreateOrderForm() {
   const router = useRouter();
+  const sp = useSearchParams();
   const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
-    catCount: 1,
+    catCount: Number(sp.get("catCount")) || 1,
     startDate: "",
     endDate: "",
-    notes: "",
-    address: "",
-    urgent: false,
+    notes: sp.get("notes") || "",
+    address: sp.get("address") || "",
+    urgent: sp.get("urgent") === "true",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
