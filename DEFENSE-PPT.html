@@ -462,32 +462,32 @@ feat: add cat diary, reorder button, and service timeline</div>
 <!-- Slide 17: CLAUDE.md -->
 <div class="slide" id="s17">
   <h2>CLAUDE.md 工程经验</h2>
-  <p style="font-size:26px; margin-bottom:20px;"><span class="highlight">CLAUDE.md 是整个项目 ROI 最高的投入</span></p>
-  <p>在写任何业务代码之前，先创建这份"项目宪法"：</p>
-  <div class="grid2" style="margin-top:20px;">
+  <p style="font-size:26px; margin-bottom:20px;"><span class="highlight">CLAUDE.md 是整个项目 ROI 最高的投入 — 给 AI 写的"项目宪法"</span></p>
+  <div class="grid2" style="margin-top:16px;">
     <div class="card">
-      <h3>📋 规范内容</h3>
-      <ul>
+      <h3>📋 规范层（v1 就有）</h3>
+      <ul style="font-size:18px;">
         <li>构建命令置顶（dev / build / tsc）</li>
         <li>目录结构约定（精确到每个文件）</li>
         <li>命名规范（kebab-case / PascalCase）</li>
-        <li>安全规范（5 条安全规则）</li>
+        <li>安全规范（5 条规则）</li>
         <li>容错降级策略表</li>
         <li>Git 提交规范 + Agent 协作规则</li>
       </ul>
     </div>
     <div class="card">
-      <h3>✅ 实际效果</h3>
-      <ul>
-        <li>写一次，12 个 Phase 持续生效</li>
-        <li>19 个新文件自动放到正确位置</li>
-        <li>commit 格式全程统一</li>
-        <li>安全实践从第一天内置</li>
-        <li>零次因命名/位置不一致而重构</li>
-        <li>CLAUDE.md 自身也随项目迭代更新</li>
+      <h3>🆕 操作手册层（迭代补充）</h3>
+      <ul style="font-size:18px;">
+        <li><span class="highlight">禁止规则</span> — 不引入新依赖、不建 API Routes、不暴露 error.stack</li>
+        <li><span class="highlight">代码模板</span> — Server Action / 服务层方法标准写法</li>
+        <li><span class="highlight">业务术语表</span> — 铲屎官=user、喂猫员=feeder</li>
+        <li><span class="highlight">测试规范</span> — 框架、文件位置、覆盖率要求</li>
+        <li><span class="highlight">具体触发条件</span> — "超过 3 个文件必须先 Plan Mode"</li>
       </ul>
     </div>
   </div>
+  <div class="divider"></div>
+  <p style="font-size:20px;">效果：12 个 Phase 风格完全统一，<span class="highlight">零次</span>因文件位置/命名不一致而重构。CLAUDE.md 自身也随项目迭代更新。</p>
 </div>
 
 <!-- Slide 18: 协作模式 -->
@@ -522,8 +522,54 @@ feat: add cat diary, reorder button, and service timeline</div>
   <p style="margin-top:16px; color:#fbbf24; font-size:24px;">我专注于"做什么"和"好不好"，Claude Code 负责"怎么做"和"做对没有"</p>
 </div>
 
-<!-- Slide 19: 总结 -->
+<!-- Slide 19: Claude Code 使用技巧 (1/2) — 常用命令 -->
 <div class="slide" id="s19">
+  <h2>Claude Code 使用心得 — 常用命令</h2>
+  <table>
+    <tr><th>命令</th><th>作用</th><th>本项目使用场景</th></tr>
+    <tr><td><span class="highlight">/init</span></td><td>自动生成 CLAUDE.md</td><td>项目第一天生成初版项目宪法</td></tr>
+    <tr><td><span class="highlight">/plan</span></td><td>进入 Plan Mode，先出方案再编码</td><td>Phase 2 审核支付流程设计</td></tr>
+    <tr><td><span class="highlight">/security-review</span></td><td>安全审计，扫描漏洞和敏感信息</td><td>检查 API Key 泄露、权限校验完整性</td></tr>
+    <tr><td><span class="highlight">/review</span></td><td>对当前改动做 Code Review</td><td>多文件改动后审查代码质量</td></tr>
+    <tr><td><span class="highlight">/commit</span></td><td>自动生成语义化 commit message</td><td>12 个 Phase 的提交全部使用</td></tr>
+    <tr><td><span class="highlight">/compact</span></td><td>压缩上下文，释放对话空间</td><td>长会话开发时保持上下文可用</td></tr>
+    <tr><td><span class="highlight">/clear</span></td><td>清空对话历史，重新开始</td><td>切换到新 Phase 时清理上下文</td></tr>
+  </table>
+  <div class="divider"></div>
+  <p style="font-size:20px;">核心原则：<span class="highlight">让 Claude Code 做它擅长的事</span> — 方案设计用 /plan，安全检查用 /security-review，提交用 /commit，不要手动做 AI 能自动化的工作。</p>
+</div>
+
+<!-- Slide 20: Claude Code 使用技巧 (2/2) — 实战心得 -->
+<div class="slide" id="s20">
+  <h2>Claude Code 使用心得 — 实战技巧</h2>
+  <div class="grid2">
+    <div class="card">
+      <h3>✅ 高效做法</h3>
+      <ul style="font-size:18px;">
+        <li><span class="highlight">先写 CLAUDE.md 再写代码</span> — 规范定一次，全程自动遵循</li>
+        <li><span class="highlight">需求说"做什么"而非"怎么做"</span> — 给 AI 决策空间，产出往往更好</li>
+        <li><span class="highlight">改动后立即验证</span> — tsc → build → 看效果，形成紧密闭环</li>
+        <li><span class="highlight">用 Plan Mode 做架构决策</span> — 避免写到一半推翻重来</li>
+        <li><span class="highlight">反馈要具体</span> — "按钮太红太大"比"不好看"有效 10 倍</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>⚠️ 避坑经验</h3>
+      <ul style="font-size:18px;">
+        <li><span class="highlight-red">Edit 工具改大文件可能出错</span> — 出现重复代码时果断用 Write 整体重写</li>
+        <li><span class="highlight-red">长会话上下文会膨胀</span> — 及时用 /compact 压缩或 /clear 重开</li>
+        <li><span class="highlight-red">tsc 通过 ≠ build 通过</span> — Next.js 有额外的编译检查，必须跑 build</li>
+        <li><span class="highlight-red">不要一次给太多需求</span> — 拆成小步骤逐个完成，质量更高</li>
+        <li><span class="highlight-red">CLAUDE.md 要及时更新</span> — 技术栈变了文档没跟上会误导 AI</li>
+      </ul>
+    </div>
+  </div>
+  <div class="divider"></div>
+  <p style="font-size:20px;">一句话总结：<span class="highlight">把 Claude Code 当高级工程师而非代码生成器</span> — 给它上下文、给它规范、给它反馈，它就能持续产出高质量代码。</p>
+</div>
+
+<!-- Slide 21: 总结 -->
+<div class="slide" id="s21">
   <div class="emoji">🎯</div>
   <h1>总结</h1>
   <div style="margin-top:20px;">
@@ -552,7 +598,7 @@ feat: add cat diary, reorder button, and service timeline</div>
   <button onclick="prev()">←</button>
   <button onclick="next()">→</button>
 </div>
-<div class="counter" id="counter">1 / 19</div>
+<div class="counter" id="counter">1 / 21</div>
 
 <script>
 let current = 0;

@@ -84,14 +84,16 @@
 1. **思考先行 (Think Before Coding)**:
    - 编写代码前，先分析 `REQUIREMENTS.md` 中的需求。
    - 将复杂任务拆解为更小的、可验证的步骤。
-   - 跨层功能使用 **Plan Mode** 先产出方案文档再动手。
+   - **超过 3 个文件的改动必须先用 Plan Mode** 产出方案文档再动手。
 2. **上下文感知 (Context Awareness)**:
    - 始终检查 `ARCHITECTURE.md` 以确保设计一致性。
    - 完成主要任务后更新 `PROGRESS.md`。
    - 新增文件时根据本文档的目录结构放到正确位置。
+   - 遇到业务术语不确定时，查阅本文档的术语表。
 3. **质量保证 (Quality Assurance)**:
    - 每次改动后运行 `tsc --noEmit` 检查类型错误。
    - 功能完成后运行 `npm run build` 作为最终门禁。
+   - 修改服务层或工具函数后运行 `npx vitest run` 验证测试。
    - 确保没有阻塞性 Bug 后再标记任务为"已完成"。
 4. **沟通 (Communication)**:
    - 如果需求模棱两可，主动提出澄清问题。
@@ -165,6 +167,67 @@ src/
 | `cat-photo-cards.ts` | 9 张 emoji 猫咪状态卡片（吃饭/睡觉/玩耍/梳毛等），替代图片上传 |
 | `pending-review-alert.tsx` | 进入页面自动检测待审核订单并弹窗提醒 |
 | `sort-toggle.tsx` | 客户端排序切换组件，通过 URL query param 传递，切换时回到第一页 |
+
+## 🚫 禁止规则 (Don'ts)
+- **不要**引入新的 npm 依赖，除非现有工具链无法实现且经用户确认。
+- **不要**创建 API Routes（`app/api/`），所有数据操作统一使用 Server Actions。
+- **不要**引入状态管理库（Redux / Zustand），URL search params + Server Component 已满足需求。
+- **不要**在 `catch` 块中向前端返回 `error.message` 或 `error.stack`，只返回通用提示文案。
+- **不要**删除或修改 Mock 数据中已有订单的 ID，会导致关联数据断裂。
+
+## 📋 代码模板 (Templates)
+
+### 新建 Server Action 模板
+```typescript
+"use server";
+import { OrderService } from "@/services/order-service";
+
+export interface ActionResult {
+  success: boolean;
+  message: string;
+}
+
+export async function myAction(param: string): Promise<ActionResult> {
+  if (!param) {
+    return { success: false, message: "参数不能为空" };
+  }
+  try {
+    // 业务逻辑...
+    return { success: true, message: "操作成功" };
+  } catch {
+    return { success: false, message: "操作失败，请稍后重试" };
+  }
+}
+```
+
+### 新建服务层方法模板
+```typescript
+// 遵循：入口调用 autoCompleteExpired() → 校验参数/权限 → 操作数据 → 返回结果
+myMethod(id: string, userId: string): Order | null {
+  autoCompleteExpired();
+  const order = getStore().find((o) => o.id === id);
+  if (!order || order.userId !== userId) return null;  // 权限校验
+  // 业务逻辑...
+  return order;
+}
+```
+
+## 📖 业务术语表 (Glossary)
+| 术语 | 含义 | 代码中的标识 |
+|------|------|-------------|
+| 铲屎官 / 猫主人 | 发布喂猫需求的用户 | `userId`, role = `"user"`, 路由 `/user` |
+| 喂猫员 | 接单并上门服务的人 | `feederId`, role = `"feeder"`, 路由 `/feeder` |
+| 接单大厅 | 喂猫员浏览待接订单的页面 | `/feeder` (page.tsx) |
+| 照片墙 | 喂猫员用 emoji 卡片记录猫咪状态 | `feedbackPhotos`, `cat-photo-cards.ts` |
+| 再来一单 | 猫主人从历史订单一键复用到发布表单 | URL search params 预填 `/user/create` |
+| 懒检查 | 查询时自动扫描过期订单并完结 | `autoCompleteExpired()` |
+
+## 🧪 测试规范
+- **测试框架**: Vitest
+- **测试文件位置**: 与被测文件同目录，命名为 `__tests__/xxx.test.ts`
+- **何时运行测试**: 修改服务层（`services/`）或工具函数（`lib/`）后必须运行
+- **测试命令**: `npx vitest run`
+- **覆盖率要求**: 服务层 ≥ 90%，工具函数 100%，详见 `TESTING.md`
 
 ## 🚀 Git 提交规范 (Commit Convention)
 - `feat(scope)`: 新增功能 (例如 `feat(order): add distance sorting`)
