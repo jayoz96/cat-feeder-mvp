@@ -7,15 +7,15 @@
 - `npm run dev`      - 启动开发服务器 (默认端口 3000)
 - `npm run build`    - 构建生产版本
 - `npm run lint`     - 运行 ESLint 检查代码质量
-- `npm run format`   - 使用 Prettier 格式化代码
+- `npx tsc --noEmit`  - TypeScript 类型检查
 - `npx shadcn-ui@latest add [组件名]` - 添加 Shadcn UI 组件
 
 ## 🏗️ 架构与技术栈 (Architecture & Tech Stack)
-- **框架**: Next.js 14+ (App Router, Server Actions)
-- **样式**: Tailwind CSS + Shadcn UI (Radix Primitives)
+- **框架**: Next.js 16 (App Router, Server Actions)
+- **样式**: Tailwind CSS 4 + Shadcn UI (Radix Primitives)
 - **语言**: TypeScript (启用严格模式)
-- **状态管理**: React Context / Zustand (MVP阶段保持简单)
-- **数据库**: Supabase (PostgreSQL) 或 本地 Mock 数据 (JSON) 以追求速度
+- **数据持久化**: 内存 Mock 数据 (globalThis 持久化，50 条模拟订单)
+- **地址服务**: 高德 Web 服务 API + 本地地址库降级
 - **图标库**: Lucide React
 
 ## 📝 编码标准与风格指南 (Coding Standards)
@@ -57,14 +57,16 @@
 ## 📦 项目目录结构
 ```text
 /src
-  /app          # App Router 页面与布局
-  /components   # 可复用 UI 组件
-    /ui         # Shadcn/基础组件
-    /features   # 业务逻辑组件
-  /lib          # 工具函数、助手、常量
-  /hooks        # 自定义 React Hooks
-  /types        # TypeScript 类型定义
-  /services     # API 调用 / Mock 数据服务
+  /app              # App Router 页面与布局
+    /(dashboard)    # 控制台路由组
+      /user         # 猫主人端 (订单、猫咪档案、日记、历史)
+      /feeder       # 喂猫员端 (接单大厅、任务、个人主页)
+  /components       # 可复用 UI 组件
+    /ui             # Shadcn/基础组件
+    /features       # 业务逻辑组件 (地址选择、分页、聊天等)
+  /lib              # 工具函数 (距离计算、猫咪状态卡片)
+  /types            # TypeScript 类型定义
+  /services         # 数据服务层 (订单、猫咪、评价、Mock 数据)
 
 🚀 Git 提交规范 (Commit Convention)
 feat(scope): 新增功能 (例如 feat(auth): add google login)
