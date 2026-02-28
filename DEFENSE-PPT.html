@@ -20,11 +20,18 @@ body { font-family: -apple-system, "Microsoft YaHei", sans-serif; background: #0
 .tag-green { background: #14532d; color: #4ade80; }
 .tag-purple { background: #3b0764; color: #c084fc; }
 .tag-orange { background: #431407; color: #fb923c; }
+.tag-red { background: #450a0a; color: #f87171; }
 .code { background: #1e293b; border-radius: 8px; padding: 20px; font-family: "Cascadia Code", "Fira Code", monospace; font-size: 17px; line-height: 1.7; color: #a5f3fc; margin: 16px 0; overflow-x: auto; white-space: pre; }
+.code-sm { font-size: 15px; padding: 14px; line-height: 1.6; }
 .highlight { color: #fbbf24; font-weight: 600; }
+.highlight-red { color: #f87171; font-weight: 600; }
+.highlight-green { color: #4ade80; font-weight: 600; }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-top: 20px; }
 .card { background: #1e293b; border-radius: 12px; padding: 24px; border: 1px solid #334155; }
 .card h3 { margin-bottom: 12px; }
+.card-red { border-color: #991b1b; }
+.card-green { border-color: #166534; }
 .nav { position: fixed; bottom: 30px; right: 40px; display: flex; gap: 12px; z-index: 10; }
 .nav button { background: #334155; border: none; color: #94a3b8; width: 44px; height: 44px; border-radius: 8px; font-size: 20px; cursor: pointer; }
 .nav button:hover { background: #475569; color: #e2e8f0; }
@@ -32,6 +39,10 @@ body { font-family: -apple-system, "Microsoft YaHei", sans-serif; background: #0
 .emoji { font-size: 48px; margin-bottom: 16px; }
 .divider { height: 2px; background: linear-gradient(90deg, #3b82f6, transparent); margin: 20px 0; }
 .subtitle { font-size: 26px; color: #94a3b8; margin-bottom: 30px; }
+table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 18px; }
+th { background: #1e293b; color: #93c5fd; padding: 10px 16px; text-align: left; border-bottom: 2px solid #334155; }
+td { padding: 10px 16px; border-bottom: 1px solid #1e293b; color: #cbd5e1; }
+tr:hover td { background: #1e293b; }
 </style>
 </head>
 <body>
@@ -43,12 +54,12 @@ body { font-family: -apple-system, "Microsoft YaHei", sans-serif; background: #0
   <p class="subtitle">Claude Code 全栈开发经验分享</p>
   <div class="divider"></div>
   <p style="font-size:18px; color:#64748b; margin-top:16px;">
-    12 个迭代阶段 · 65+ 文件 · 9,500+ 行代码 · 从 create-next-app 到功能完整的双端平台
+    12 个迭代阶段 · 49 个源文件 · 9,500+ 行代码 · 从 create-next-app 到功能完整的双端平台
   </p>
   <div style="margin-top:30px;">
     <span class="tag tag-blue">Next.js 16</span>
     <span class="tag tag-green">TypeScript</span>
-    <span class="tag tag-purple">Tailwind CSS</span>
+    <span class="tag tag-purple">Tailwind CSS 4</span>
     <span class="tag tag-orange">shadcn/ui</span>
   </div>
 </div>
@@ -127,10 +138,14 @@ body { font-family: -apple-system, "Microsoft YaHei", sans-serif; background: #0
     <li>降级策略：高德 API 不可用时回退到本地地址库</li>
   </ul>
   <div class="divider"></div>
-  <h3>案例：照片墙 + 距离排序的分层方案</h3>
-  <p>两个功能同时开发，先产出完整方案，明确实现顺序：</p>
-  <div class="code">类型(types) → 工具函数(lib) → Mock 数据 → 服务层(services) → UI 层</div>
-  <p>18 个文件的协调改动在一个 commit 里完成，没有中间的"半成品"状态。</p>
+  <h3>核心架构决策</h3>
+  <table>
+    <tr><th>决策</th><th>选择</th><th>理由</th></tr>
+    <tr><td>数据持久化</td><td>globalThis 内存存储</td><td>MVP 追求速度，零配置</td></tr>
+    <tr><td>API 层</td><td>Server Actions</td><td>替代 API Routes，减少样板代码</td></tr>
+    <tr><td>超时完结</td><td>懒检查机制</td><td>零额外基础设施</td></tr>
+    <tr><td>分页/排序</td><td>URL search params</td><td>纯 URL 驱动，无状态管理库</td></tr>
+  </table>
 </div>
 
 <!-- Slide 6: 维度三 — 编码 -->
@@ -155,55 +170,131 @@ body { font-family: -apple-system, "Microsoft YaHei", sans-serif; background: #0
   <span class="tag tag-purple">维度三</span>
   <h2>编码（续）</h2>
   <h3>案例 3：Haversine 距离计算 — 15 行实现</h3>
-  <div class="code">// src/lib/distance.ts
+  <div class="code code-sm">// src/lib/distance.ts
 export function haversineDistance(a: Coordinates, b: Coordinates): number {
-  const R = 6371;
-  const dLat = ((b.lat - a.lat) * Math.PI) / 180;
-  const dLng = ((b.lng - a.lng) * Math.PI) / 180;
-  const x = Math.sin(dLat/2)**2 + Math.cos(a.lat*Math.PI/180)
-            * Math.cos(b.lat*Math.PI/180) * Math.sin(dLng/2)**2;
-  return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1-x));
+  const toRad = (deg: number) =&gt; (deg * Math.PI) / 180;
+  const dLat = toRad(b.lat - a.lat);
+  const dLng = toRad(b.lng - a.lng);
+  const sinLat = Math.sin(dLat / 2);
+  const sinLng = Math.sin(dLng / 2);
+  const h = sinLat * sinLat + Math.cos(toRad(a.lat))
+            * Math.cos(toRad(b.lat)) * sinLng * sinLng;
+  return 2 * EARTH_RADIUS_KM * Math.asin(Math.sqrt(h));
 }
 export function formatDistance(km: number): string {
-  return km < 1 ? `${Math.round(km*1000)}m` : `${km.toFixed(1)}km`;
+  return km &lt; 1 ? `${Math.round(km*1000)}m` : `${km.toFixed(1)}km`;
 }</div>
   <h3>案例 4：再来一单 — URL 参数驱动的表单预填</h3>
-  <p>零额外状态管理，纯 URL search params 传递历史订单数据到创建页：</p>
-  <div class="code">const params = new URLSearchParams({
-  catCount: String(order.catCount),
-  address: order.address,
-  notes: order.notes || "",
-  urgent: String(!!order.urgent),
-});
-router.push(`/user/create?${params}`);</div>
+  <p>零额外状态管理，纯 URL search params 传递历史订单数据到创建页。</p>
 </div>
 
-<!-- Slide 8: 维度四 — Code Review -->
+<!-- Slide 8: 维度四 — Code Review (1/3) -->
 <div class="slide" id="s8">
   <span class="tag tag-orange">维度四</span>
-  <h2>Code Review</h2>
-  <h3>案例 1：tsc --noEmit 作为自动 Code Review 门禁</h3>
-  <p>每次改动后运行 <span class="highlight">tsc --noEmit</span>，形成"编码 → 检查 → 修复"闭环：</p>
-  <ul>
-    <li>变量从 <code>done</code> 改名为 <code>pendingReview</code> 后，JSX 里仍有一处 <code>done.length</code> → 被类型检查立即捕获</li>
-    <li>18 个文件改动后 tsc 一次通过 → 验证了分层改动策略的可靠性</li>
-  </ul>
+  <h2>Code Review — 三层门禁机制</h2>
+  <p style="font-size:24px; margin-bottom:20px;">整个项目的 Code Review 由三层机制组成：</p>
+  <div class="grid3">
+    <div class="card">
+      <h3>🔍 第一层：tsc --noEmit</h3>
+      <p style="font-size:18px;">每次改动后运行<br>捕获类型错误、变量遗漏</p>
+      <p style="font-size:14px; color:#64748b; margin-top:8px;">速度快，秒级反馈</p>
+    </div>
+    <div class="card">
+      <h3>🏗️ 第二层：npm run build</h3>
+      <p style="font-size:18px;">功能完成后运行<br>验证模块解析、Suspense 边界</p>
+      <p style="font-size:14px; color:#64748b; margin-top:8px;">比 tsc 更严格</p>
+    </div>
+    <div class="card">
+      <h3>👤 第三层：人工验收</h3>
+      <p style="font-size:18px;">UI/UX 体验审核<br>视觉层级、交互细节</p>
+      <p style="font-size:14px; color:#64748b; margin-top:8px;">主观体验反馈</p>
+    </div>
+  </div>
   <div class="divider"></div>
-  <h3>案例 2：npm run build 捕获 import 路径错误</h3>
-  <p><code>history-order-card.tsx</code> 引用了 <code>./order-detail-dialog</code>，但文件在上级目录。</p>
-  <p>修正为 <code>../order-detail-dialog</code> 后通过。<span class="highlight">tsc 通过 ≠ Next.js 模块解析也能通过</span>。</p>
-  <div class="divider"></div>
-  <h3>案例 3：删除按钮的 UI 迭代</h3>
-  <p>初版：全宽红色按钮 → 用户反馈"太鲜艳" → 精准调整三个维度：位置（移到徽章下方）、尺寸（同徽章大小）、颜色（低调灰色）</p>
+  <p style="font-size:20px;">形成闭环：<span class="highlight">编码 → tsc（类型安全）→ build（模块解析）→ 人工验收 → 反馈修复 → 编码</span></p>
 </div>
 
-<!-- Slide 9: 维度五 — 测试 -->
+<!-- Slide 9: 维度四 — Code Review (2/3) 具体案例 -->
 <div class="slide" id="s9">
+  <span class="tag tag-orange">维度四</span>
+  <h2>Code Review — 5 个实际捕获的 Bug</h2>
+  <table>
+    <tr><th>阶段</th><th>问题</th><th>捕获层</th><th>修复</th></tr>
+    <tr>
+      <td>Phase 5</td>
+      <td>变量 <code>done</code> 改名 <code>pendingReview</code> 后，JSX 仍引用 <code>done.length</code></td>
+      <td><span class="highlight">tsc</span></td>
+      <td>立即修复引用</td>
+    </tr>
+    <tr>
+      <td>Phase 5</td>
+      <td>Edit 工具导致文件出现两个 <code>export default function</code></td>
+      <td><span class="highlight">tsc</span></td>
+      <td>改用 Write 整体重写</td>
+    </tr>
+    <tr>
+      <td>Phase 10</td>
+      <td><code>./order-detail-dialog</code> 路径错误，实际在上级目录</td>
+      <td><span class="highlight">build</span></td>
+      <td>修正为 <code>../order-detail-dialog</code></td>
+    </tr>
+    <tr>
+      <td>Phase 12</td>
+      <td><code>useSearchParams()</code> 未包裹在 Suspense 边界内</td>
+      <td><span class="highlight">build</span></td>
+      <td>拆为 wrapper + inner 组件</td>
+    </tr>
+    <tr>
+      <td>Phase 10</td>
+      <td>删除按钮视觉层级过重（全宽红色）</td>
+      <td><span class="highlight">人工</span></td>
+      <td>调整位置/尺寸/颜色三维度</td>
+    </tr>
+  </table>
+  <p style="margin-top:16px; font-size:20px;">关键发现：<span class="highlight">tsc 通过 ≠ build 通过</span> — Next.js 的模块解析和 Suspense 检查是 tsc 覆盖不到的</p>
+</div>
+
+<!-- Slide 10: 维度四 — Code Review (3/3) UI 迭代 -->
+<div class="slide" id="s10">
+  <span class="tag tag-orange">维度四</span>
+  <h2>Code Review — 删除按钮 UI 迭代</h2>
+  <p>初版用了全宽红色 <code>destructive</code> 按钮，用户反馈"太鲜艳、太大"。Claude Code 精准调整：</p>
+  <div class="grid2" style="margin-top:20px;">
+    <div class="card card-red">
+      <h3>❌ 第一版</h3>
+      <ul>
+        <li>位置：卡片底部独占一行</li>
+        <li>尺寸：全宽按钮</li>
+        <li>颜色：红色 destructive</li>
+      </ul>
+      <div class="code code-sm" style="color:#f87171;">&lt;Button variant="destructive" className="w-full"&gt;
+  删除订单
+&lt;/Button&gt;</div>
+    </div>
+    <div class="card card-green">
+      <h3>✅ 第二版</h3>
+      <ul>
+        <li>位置：徽章下方，flex-col 纵向</li>
+        <li>尺寸：与徽章同尺寸</li>
+        <li>颜色：低调灰色，hover 加深</li>
+      </ul>
+      <div class="code code-sm" style="color:#4ade80;">&lt;button className="rounded-full px-2
+  py-0.5 text-xs bg-gray-100
+  text-gray-800 hover:bg-gray-200"&gt;
+  删除
+&lt;/button&gt;</div>
+    </div>
+  </div>
+  <p style="margin-top:16px;">功能正确只是第一步，<span class="highlight">视觉层级和交互细节</span>需要用户反馈驱动迭代。</p>
+</div>
+
+<!-- Slide 11: 维度五 — 测试 (1/2) -->
+<div class="slide" id="s11">
   <span class="tag tag-blue">维度五</span>
-  <h2>测试</h2>
+  <h2>测试 — 调试实战</h2>
   <h3>案例 1：懒检查机制替代定时器</h3>
-  <p><code>pending_review</code> 超过 3 小时需自动转为 <code>paid</code>。没有引入 cron job，而是在每个查询入口调用：</p>
-  <div class="code">function autoCompleteExpired() {
+  <p><code>pending_review</code> 超 3 小时需自动完结。没有引入 cron job，而是在每个查询入口调用：</p>
+  <div class="code code-sm">function autoCompleteExpired() {
   const now = Date.now();
   for (const order of getStore()) {
     if (order.status === "pending_review" && order.completedAt &&
@@ -212,57 +303,146 @@ router.push(`/user/create?${params}`);</div>
     }
   }
 }</div>
-  <p>零额外基础设施，每次读取时自动校验数据一致性。</p>
   <div class="divider"></div>
-  <h3>案例 2：Suspense 边界问题</h3>
-  <p>引入 <code>useSearchParams()</code> 后 <span class="highlight">npm run build 报错</span>：Next.js 要求该 Hook 必须在 Suspense 内。</p>
-  <p>修复：将组件拆为 wrapper（含 Suspense）+ inner（含 Hook），4 行改动解决。</p>
+  <h3>案例 2：Mock 数据缓存刷新 — 4 行修复</h3>
+  <p>新增 50 条数据后热重载仍显示旧数据。用 <span class="highlight">MOCK_ORDERS.length</span> 作为版本号，不一致则刷新。</p>
+  <p><span class="highlight">最小侵入原则</span>：4 行代码，不引入额外依赖。</p>
 </div>
 
-<!-- Slide 10: 维度五续 — 测试 -->
-<div class="slide" id="s10">
+<!-- Slide 12: 维度五 — 测试 (2/2) 测试方案 -->
+<div class="slide" id="s12">
   <span class="tag tag-blue">维度五</span>
-  <h2>测试（续）</h2>
-  <h3>案例 3：Mock 数据缓存刷新 — 4 行修复</h3>
-  <p>新增 50 条 Mock 数据后，热重载仍显示旧数据。根因：<code>globalThis.__orders</code> 被缓存。</p>
-  <div class="code">const STORE_VERSION = MOCK_ORDERS.length;
-if (!globalForOrders.__orders ||
-    globalForOrders.__ordersVersion !== STORE_VERSION) {
-  globalForOrders.__orders = [...MOCK_ORDERS];
-  globalForOrders.__ordersVersion = STORE_VERSION;
-}</div>
-  <p>最小侵入方案，解决了开发体验的关键痛点。</p>
+  <h2>测试 — 测试方案设计（TESTING.md）</h2>
+  <p>为项目设计了完整的测试方案，覆盖 5 个核心模块：</p>
+  <table>
+    <tr><th>模块</th><th>测试重点</th><th>用例数</th><th>覆盖率目标</th></tr>
+    <tr><td>order-service.ts</td><td>状态机流转、费用计算、权限校验、超时自动完结、距离排序</td><td>16</td><td>≥ 90%</td></tr>
+    <tr><td>distance.ts</td><td>Haversine 距离计算、格式化显示</td><td>5</td><td>100%</td></tr>
+    <tr><td>cat-photo-cards.ts</td><td>卡片数据完整性、ID 唯一性</td><td>4</td><td>100%</td></tr>
+    <tr><td>cat-service.ts</td><td>CRUD 操作</td><td>4</td><td>≥ 80%</td></tr>
+    <tr><td>review-service.ts</td><td>评价创建、平均评分计算</td><td>5</td><td>≥ 80%</td></tr>
+  </table>
+  <div class="divider"></div>
+  <h3>安全相关测试用例</h3>
+  <ul>
+    <li>用户 A <span class="highlight-red">不能</span>删除用户 B 的订单 → <code>deleteOrder(orderOfB, userA)</code> 返回 false</li>
+    <li>只有 <code>pending</code> 可接单，只有 <code>pending_review</code> 可支付 → 非法状态返回 null</li>
+    <li>不存在的订单 ID → 返回 null / false，不抛异常</li>
+  </ul>
 </div>
 
-<!-- Slide 11: 维度六 — 安全 -->
-<div class="slide" id="s11">
-  <span class="tag tag-green">维度六</span>
-  <h2>安全</h2>
-  <h3>案例 1：API Key 保护与降级策略</h3>
-  <ul>
-    <li>高德 API Key 通过 <span class="highlight">NEXT_PUBLIC_AMAP_KEY</span> 环境变量注入</li>
-    <li><code>.env.local</code> 被 <code>.gitignore</code> 排除，不会泄露到 Git</li>
-    <li>API 调用做了 try/catch，失败时<span class="highlight">静默降级为本地地址库</span></li>
-    <li>不向前端暴露错误详情</li>
-  </ul>
-  <div class="divider"></div>
-  <h3>案例 2：deleteOrder 的权限校验</h3>
-  <div class="code">deleteOrder(orderId: string, userId: string): boolean {
-  const order = store.find((o) => o.id === orderId);
-  if (!order || order.userId !== userId) return false;  // 防止越权删除
-  setStore(store.filter((o) => o.id !== orderId));
+<!-- Slide 13: 维度六 — 安全 (1/3) -->
+<div class="slide" id="s13">
+  <span class="tag tag-red">维度六</span>
+  <h2>安全 — 五层防护体系</h2>
+  <p style="font-size:24px; margin-bottom:16px;">即使是 MVP 项目，<span class="highlight">安全边界从第一天就建立</span></p>
+  <div class="grid2">
+    <div class="card">
+      <h3>🔑 1. API Key 防泄露</h3>
+      <ul style="font-size:18px;">
+        <li>高德 Key 通过 <code>NEXT_PUBLIC_AMAP_KEY</code> 环境变量注入</li>
+        <li><code>.env.local</code> 被 <code>.gitignore</code> 排除</li>
+        <li>密钥永远不会进入 Git 仓库</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>🛡️ 2. 优雅降级，不暴露错误</h3>
+      <ul style="font-size:18px;">
+        <li>API 调用 try/catch 包裹</li>
+        <li>失败时静默降级到本地地址库</li>
+        <li>不向前端暴露错误堆栈或 API 细节</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>👤 3. 权限校验</h3>
+      <ul style="font-size:18px;">
+        <li><code>deleteOrder</code> 校验 userId 归属</li>
+        <li>防止用户 A 删除用户 B 的订单</li>
+        <li>后续接入真实认证无需重构</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>✅ 4. 输入校验 + 状态校验</h3>
+      <ul style="font-size:18px;">
+        <li>Server Action 入口校验必填参数</li>
+        <li>统一 <code>ActionResult</code> 返回结构</li>
+        <li>每个状态变更检查当前状态合法性</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 14: 维度六 — 安全 (2/3) 代码示例 -->
+<div class="slide" id="s14">
+  <span class="tag tag-red">维度六</span>
+  <h2>安全 — 代码级防护</h2>
+  <h3>权限校验：防止越权删除</h3>
+  <div class="code code-sm">// src/services/order-service.ts:160-167
+deleteOrder(orderId: string, userId: string): boolean {
+  const store = getStore();
+  const order = store.find((o) =&gt; o.id === orderId);
+  if (!order || <span class="highlight">order.userId !== userId</span>) return false;  // 权限校验
+  setStore(store.filter((o) =&gt; o.id !== orderId));
   return true;
 }</div>
-  <p>虽然 MVP 用 Mock 用户，但<span class="highlight">安全边界从第一天就建立</span>，后续接入真实认证时无需重构。</p>
-  <p style="margin-top:12px;">用户手机号脱敏显示（138****1234），地址信息只在订单上下文中展示。</p>
+  <h3>Server Action 输入校验：统一错误返回</h3>
+  <div class="code code-sm">// src/app/(dashboard)/user/actions.ts
+export async function deleteOrder(orderId: string): Promise&lt;ActionResult&gt; {
+  if (<span class="highlight">!orderId</span>) return { success: false, message: "订单 ID 不能为空" };
+  try {
+    const deleted = OrderService.deleteOrder(orderId, "user-1");
+    if (!deleted) return { success: false, message: "订单不存在或无法删除" };
+    return { success: true, message: "订单已删除" };
+  } catch {
+    return { success: false, message: "删除失败，请稍后重试" };  // <span class="highlight">不暴露内部错误</span>
+  }
+}</div>
 </div>
 
-<!-- Slide 12: 维度七 — 版本管理 -->
-<div class="slide" id="s12">
+<!-- Slide 15: 维度六 — 安全 (3/3) Security Review -->
+<div class="slide" id="s15">
+  <span class="tag tag-red">维度六</span>
+  <h2>安全 — Claude Code /security-review 命令</h2>
+  <p>Claude Code 内置了 <span class="highlight">/security-review</span> 命令，可对整个项目或指定文件进行安全审计：</p>
+  <div class="code code-sm" style="color:#94a3b8;">&gt; /security-review
+
+Claude Code 会自动扫描项目代码，检查以下安全维度：
+• 敏感信息泄露（API Key、密码硬编码）
+• 注入漏洞（XSS、SQL 注入、命令注入）
+• 不安全的依赖和配置
+• 权限校验缺失
+• 错误信息过度暴露</div>
+  <div class="divider"></div>
+  <h3>在本项目中的应用</h3>
+  <div class="grid2">
+    <div class="card">
+      <h3>🔍 审查发现</h3>
+      <ul style="font-size:18px;">
+        <li>确认 .env.local 已被 .gitignore 排除</li>
+        <li>确认 Server Action 的 catch 不暴露堆栈</li>
+        <li>确认状态流转有前置状态校验</li>
+        <li>确认 deleteOrder 有 userId 归属检查</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>💡 审查建议</h3>
+      <ul style="font-size:18px;">
+        <li>建议对用户输入做进一步 sanitize</li>
+        <li>建议添加 rate limiting 防刷</li>
+        <li>建议 NEXT_PUBLIC_ 前缀 Key 注意前端可见性</li>
+        <li>MVP 阶段已有完善安全基线</li>
+      </ul>
+    </div>
+  </div>
+  <p style="margin-top:16px; font-size:20px;"><span class="highlight">/security-review</span> 相当于一次自动化的安全 Code Review，是 tsc + build 之外的<span class="highlight">第三道安全门禁</span></p>
+</div>
+
+<!-- Slide 16: 维度七 — 版本管理 -->
+<div class="slide" id="s16">
   <span class="tag tag-purple">维度七</span>
   <h2>版本管理</h2>
   <h3>案例 1：语义化 commit 历史</h3>
-  <div class="code">feat: implement MVP core flow
+  <div class="code code-sm">feat: implement MVP core flow
 feat: add address search and review-payment flow
 fix: force-dynamic pages, amap address search
 feat: add cat avatars, AI recommendation tags
@@ -279,8 +459,8 @@ feat: add cat diary, reorder button, and service timeline</div>
   <p>每次功能开发完成后，同步更新 <span class="highlight">README.md + ARCHITECTURE.md + REQUIREMENTS.md</span>，文档和代码在同一个流程中维护。</p>
 </div>
 
-<!-- Slide 13: 加分项 — CLAUDE.md -->
-<div class="slide" id="s13">
+<!-- Slide 17: 加分项 — CLAUDE.md -->
+<div class="slide" id="s17">
   <span class="tag tag-orange">加分项</span>
   <h2>CLAUDE.md 工程经验</h2>
   <p style="font-size:26px; margin-bottom:20px;"><span class="highlight">CLAUDE.md 是整个项目 ROI 最高的投入</span></p>
@@ -290,27 +470,29 @@ feat: add cat diary, reorder button, and service timeline</div>
       <h3>📋 规范内容</h3>
       <ul>
         <li>构建命令置顶（dev / build / tsc）</li>
-        <li>目录结构约定</li>
+        <li>目录结构约定（精确到每个文件）</li>
         <li>命名规范（kebab-case / PascalCase）</li>
-        <li>Git 提交规范（feat/fix/docs）</li>
-        <li>Agent 协作规则</li>
+        <li>安全规范（5 条安全规则）</li>
+        <li>容错降级策略表</li>
+        <li>Git 提交规范 + Agent 协作规则</li>
       </ul>
     </div>
     <div class="card">
       <h3>✅ 实际效果</h3>
       <ul>
         <li>写一次，12 个 Phase 持续生效</li>
-        <li>所有文件自动放到正确位置</li>
+        <li>19 个新文件自动放到正确位置</li>
         <li>commit 格式全程统一</li>
-        <li>无需每次重复约定规范</li>
-        <li>新功能自动遵循架构</li>
+        <li>安全实践从第一天内置</li>
+        <li>零次因命名/位置不一致而重构</li>
+        <li>CLAUDE.md 自身也随项目迭代更新</li>
       </ul>
     </div>
   </div>
 </div>
 
-<!-- Slide 14: 协作模式 -->
-<div class="slide" id="s14">
+<!-- Slide 18: 协作模式 -->
+<div class="slide" id="s18">
   <span class="tag tag-orange">加分项</span>
   <h2>人机协作分工模式</h2>
   <div class="grid2">
@@ -329,7 +511,7 @@ feat: add cat diary, reorder button, and service timeline</div>
         <li>需求拆解 & 产品设计</li>
         <li>架构设计 & 方案评审</li>
         <li>编码实现 & 自我检查</li>
-        <li>文档维护 & 版本管理</li>
+        <li>安全审计 & 文档维护</li>
       </ul>
     </div>
   </div>
@@ -342,14 +524,14 @@ feat: add cat diary, reorder button, and service timeline</div>
   <p style="margin-top:16px; color:#fbbf24; font-size:24px;">我专注于"做什么"和"好不好"，Claude Code 负责"怎么做"和"做对没有"</p>
 </div>
 
-<!-- Slide 15: 总结 -->
-<div class="slide" id="s15">
+<!-- Slide 19: 总结 -->
+<div class="slide" id="s19">
   <div class="emoji">🎯</div>
   <h1>总结</h1>
   <div style="margin-top:20px;">
     <p style="font-size:26px; line-height:2;">
       <span class="highlight">12</span> 个迭代阶段 ·
-      <span class="highlight">65+</span> 文件 ·
+      <span class="highlight">49</span> 个源文件 ·
       <span class="highlight">9,500+</span> 行代码
     </p>
   </div>
@@ -358,9 +540,9 @@ feat: add cat diary, reorder button, and service timeline</div>
       <li><strong>需求理解</strong>：从五个字到完整产品设计，自主设计推荐算法和日记功能</li>
       <li><strong>架构设计</strong>：Plan Mode 先对齐方案，分层实现保证类型安全</li>
       <li><strong>编码</strong>：自底向上分层改动，通用组件复用，最小侵入原则</li>
-      <li><strong>Code Review</strong>：tsc + build 双重门禁，用户反馈精准迭代</li>
-      <li><strong>测试</strong>：懒检查机制、Suspense 边界修复、缓存版本号</li>
-      <li><strong>安全</strong>：API Key 保护、权限校验、数据脱敏</li>
+      <li><strong>Code Review</strong>：tsc + build + 人工三层门禁，<span class="highlight">5 个实际 Bug 捕获案例</span></li>
+      <li><strong>测试</strong>：懒检查机制、缓存版本号、<span class="highlight">34 个测试用例的完整测试方案</span></li>
+      <li><strong>安全</strong>：五层防护 + <span class="highlight">/security-review 安全审计命令</span></li>
       <li><strong>版本管理</strong>：语义化 commit、代码文档同步更新</li>
     </ul>
   </div>
@@ -372,7 +554,7 @@ feat: add cat diary, reorder button, and service timeline</div>
   <button onclick="prev()">←</button>
   <button onclick="next()">→</button>
 </div>
-<div class="counter" id="counter">1 / 15</div>
+<div class="counter" id="counter">1 / 19</div>
 
 <script>
 let current = 0;
