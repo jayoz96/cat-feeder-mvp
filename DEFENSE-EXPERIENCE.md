@@ -73,15 +73,24 @@ Plan Mode 的价值：**先对齐方案再动手写代码**，避免写到一半
 
 ---
 
-## 四、Code Review：tsc + build 双门禁
+## 四、Code Review：tsc + build 双门禁 + 用户反馈迭代
 
-**场景**：Phase 5 中将变量 `done` 改名为 `pendingReview` 后，JSX 里仍有一处 `done.length`。
+整个项目的 Code Review 由三层机制组成：**tsc 类型检查 → build 编译验证 → 人工体验审核**。
 
-**Claude Code 的做法**：每次改动后运行 `tsc --noEmit`，立即捕获并修复。形成了 **"编码 → 检查 → 修复"** 的紧密闭环。
+### 4.1 tsc --noEmit 作为自动 Code Review
 
-**另一个例子**：Phase 10 中 `npm run build` 捕获了 import 路径错误——`history/history-order-card.tsx` 引用了 `./order-detail-dialog`，但文件实际在上级 `user/` 目录。`tsc --noEmit` 通过但 Next.js 模块解析报错，说明 **build 是比类型检查更严格的最终门禁**。
+每次改动后运行 `tsc --noEmit`，形成 **"编码 → 检查 → 修复"** 的紧密闭环。具体捕获的问题：
 
-**Phase 12 的 Suspense 边界问题**：引入 `useSearchParams()` 后 `npm run build` 报错——Next.js 要求该 Hook 必须包裹在 `<Suspense>` 内。修复方案：
+- **Phase 5**：变量从 `done` 改名为 `pendingReview` 后，JSX 里仍有一处 `done.length`，被类型检查立即捕获并修复
+- **Phase 5**：Edit 工具对 `tasks/page.tsx` 的部分编辑导致出现两个 `export default function`，发现后改用 Write 工具整体重写，而不是继续用 Edit 打补丁
+- **Phase 10**：18 个文件的照片墙 + 距离排序改动后 `tsc --noEmit` 一次通过，验证了分层改动策略的可靠性
+
+### 4.2 npm run build 作为最终门禁
+
+`tsc --noEmit` 通过不代表 Next.js 的完整编译也能通过。`npm run build` 是比类型检查**更严格的最终门禁**：
+
+- **Phase 10**：`history/history-order-card.tsx` 引用了 `./order-detail-dialog`，但文件实际在上级 `user/` 目录。tsc 通过但 build 报错，修正为 `../order-detail-dialog` 后通过
+- **Phase 12**：引入 `useSearchParams()` 后 build 报错——Next.js 要求该 Hook 必须包裹在 `<Suspense>` 内。修复方案：
 
 ```tsx
 // 拆为 wrapper + inner，wrapper 用 Suspense 包裹
@@ -93,6 +102,18 @@ export default function CreateOrderPage() {
   );
 }
 ```
+
+### 4.3 用户反馈驱动的 UI 迭代
+
+**删除按钮的两轮迭代**：初版用了全宽红色 `destructive` 按钮放在卡片底部，用户反馈"太鲜艳、太大"。Claude Code 精准定位三个调整维度，没有过度修改其他部分：
+
+| 维度 | 第一版 | 第二版 |
+|------|--------|--------|
+| 位置 | 卡片底部独占一行 | "待接单"徽章正下方，flex-col 纵向排列 |
+| 尺寸 | 全宽按钮 | 与徽章同尺寸的圆角标签 (`rounded-full px-2 py-0.5 text-xs`) |
+| 颜色 | 红色 destructive | 低调灰色 (`bg-gray-100 text-gray-800`)，hover 加深 |
+
+这体现了 UI 开发的常见模式——功能正确只是第一步，视觉层级和交互细节需要根据用户反馈快速调整。
 
 ---
 
