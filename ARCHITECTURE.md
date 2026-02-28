@@ -17,7 +17,8 @@ src/
 │   ├── (auth)/          # 登录注册路由组
 │   ├── (dashboard)/     # 控制台路由组
 │   │   ├── user/        # 铲屎官界面
-│   │   │   └── history/ # 历史订单
+│   │   │   ├── history/ # 历史订单
+│   │   │   └── diary/   # 猫咪日记
 │   │   └── feeder/      # 喂猫员界面
 │   ├── api/             # API Endpoints (如需)
 │   └── layout.tsx       # 全局布局

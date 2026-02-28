@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>上门喂猫 MVP — Claude Code 开发经验答辩</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, "Microsoft YaHei", sans-serif; background: #0f172a; color: #e2e8f0; overflow: hidden; }
+.slide { display: none; width: 100vw; height: 100vh; padding: 60px 80px; flex-direction: column; justify-content: center; }
+.slide.active { display: flex; }
+.slide h1 { font-size: 48px; margin-bottom: 20px; background: linear-gradient(135deg, #60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.slide h2 { font-size: 36px; margin-bottom: 24px; color: #93c5fd; }
+.slide h3 { font-size: 24px; margin-bottom: 16px; color: #7dd3fc; }
+.slide p, .slide li { font-size: 22px; line-height: 1.8; color: #cbd5e1; }
+.slide ul { padding-left: 30px; }
+.slide li { margin-bottom: 8px; }
+.tag { display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 14px; font-weight: 600; margin-right: 8px; }
+.tag-blue { background: #1e3a5f; color: #60a5fa; }
+.tag-green { background: #14532d; color: #4ade80; }
+.tag-purple { background: #3b0764; color: #c084fc; }
+.tag-orange { background: #431407; color: #fb923c; }
+.code { background: #1e293b; border-radius: 8px; padding: 20px; font-family: "Cascadia Code", "Fira Code", monospace; font-size: 17px; line-height: 1.7; color: #a5f3fc; margin: 16px 0; overflow-x: auto; white-space: pre; }
+.highlight { color: #fbbf24; font-weight: 600; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px; }
+.card { background: #1e293b; border-radius: 12px; padding: 24px; border: 1px solid #334155; }
+.card h3 { margin-bottom: 12px; }
+.nav { position: fixed; bottom: 30px; right: 40px; display: flex; gap: 12px; z-index: 10; }
+.nav button { background: #334155; border: none; color: #94a3b8; width: 44px; height: 44px; border-radius: 8px; font-size: 20px; cursor: pointer; }
+.nav button:hover { background: #475569; color: #e2e8f0; }
+.counter { position: fixed; bottom: 36px; left: 40px; color: #475569; font-size: 14px; }
+.emoji { font-size: 48px; margin-bottom: 16px; }
+.divider { height: 2px; background: linear-gradient(90deg, #3b82f6, transparent); margin: 20px 0; }
+.subtitle { font-size: 26px; color: #94a3b8; margin-bottom: 30px; }
+</style>
+</head>
+<body>
+
+<!-- Slide 1: 封面 -->
+<div class="slide active" id="s1">
+  <div class="emoji">🐱</div>
+  <h1>上门喂猫 MVP</h1>
+  <p class="subtitle">Claude Code 全栈开发经验分享</p>
+  <div class="divider"></div>
+  <p style="font-size:18px; color:#64748b; margin-top:16px;">
+    12 个迭代阶段 · 65+ 文件 · 9,500+ 行代码 · 从 create-next-app 到功能完整的双端平台
+  </p>
+  <div style="margin-top:30px;">
+    <span class="tag tag-blue">Next.js 16</span>
+    <span class="tag tag-green">TypeScript</span>
+    <span class="tag tag-purple">Tailwind CSS</span>
+    <span class="tag tag-orange">shadcn/ui</span>
+  </div>
+</div>
+
+<!-- Slide 2: 项目概览 -->
+<div class="slide" id="s2">
+  <h2>项目概览</h2>
+  <div class="grid2">
+    <div class="card">
+      <h3>🧑 猫主人端 /user</h3>
+      <ul>
+        <li>发布喂猫需求（日期、猫数、地址）</li>
+        <li>订单管理 + 历史订单 + 猫咪日记</li>
+        <li>审核支付 + 待审核弹窗提醒</li>
+        <li>猫咪档案 + 再来一单</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>🐾 喂猫员端 /feeder</h3>
+      <ul>
+        <li>接单大厅（距离/时间排序）</li>
+        <li>AI 推荐标签 + 加急标识</li>
+        <li>照片墙 + 签到打卡 + 服务时间线</li>
+        <li>个人主页 + 评分统计</li>
+      </ul>
+    </div>
+  </div>
+  <div style="margin-top:30px;">
+    <p style="font-size:18px; color:#64748b;">订单状态机：待接单 → 已接单 → 服务中 → 待审核 → 已支付</p>
+  </div>
+</div>
+
+<!-- Slide 3: 维度一 — 需求理解 -->
+<div class="slide" id="s3">
+  <span class="tag tag-blue">维度一</span>
+  <h2>需求理解</h2>
+  <h3>案例 1：从"上门喂猫 MVP"五个字到完整产品</h3>
+  <ul>
+    <li>用户只给了一句话，Claude Code 自主拆解出：</li>
+    <li>双端角色划分（铲屎官 vs 喂猫员）</li>
+    <li>完整订单状态机：<span class="highlight">pending → accepted → in_progress → pending_review → paid</span></li>
+    <li>费用公式：按天 × 猫数 × 加急系数</li>
+    <li>选择 <span class="highlight">globalThis</span> 内存持久化 — 准确理解"MVP 追求速度"的约束</li>
+  </ul>
+  <div class="divider"></div>
+  <h3>案例 2：AI 推荐标签的自主设计</h3>
+  <p>需求中没有定义推荐逻辑，Claude Code 自主设计了三维度算法：猫多（≥2只）→ 工作量大、价高（≥300元）→ 直接收益、日期近（≤5天）→ 紧急度</p>
+</div>
+
+<!-- Slide 4: 维度一续 — 需求理解 -->
+<div class="slide" id="s4">
+  <span class="tag tag-blue">维度一</span>
+  <h2>需求理解（续）</h2>
+  <h3>案例 3：待审核弹窗推送</h3>
+  <p>用户说"喂猫员完成的订单需要推送给铲屎官"</p>
+  <p style="margin-top:12px;">Claude Code 理解到 MVP 不需要真正的 push notification，而是用<span class="highlight">弹窗模拟推送</span>——进入订单页自动检测 pending_review 订单并弹窗提醒，点击"去审核"直接跳转支付。</p>
+  <div class="divider"></div>
+  <h3>案例 4：猫咪日记的产品思维</h3>
+  <p>用户说"再增加一些有意思的小想法"，Claude Code 以产品经理角色建议了三个功能：</p>
+  <ul>
+    <li><span class="highlight">猫咪日记</span> — 提升情感化体验，聚合所有服务照片和反馈</li>
+    <li><span class="highlight">再来一单</span> — 降低复购门槛，一键预填表单</li>
+    <li><span class="highlight">服务时间线</span> — 增强信任感，展示签到签退记录</li>
+  </ul>
+</div>
+
+<!-- Slide 5: 维度二 — 架构设计 -->
+<div class="slide" id="s5">
+  <span class="tag tag-green">维度二</span>
+  <h2>架构设计</h2>
+  <h3>案例：Plan Mode 驱动的状态机扩展</h3>
+  <p>给订单加"审核支付"流程时，没有直接写代码，而是先用 <span class="highlight">Plan Mode</span> 产出方案文档：</p>
+  <ul style="margin-top:16px;">
+    <li>状态机扩展：新增 pending_review 和 paid 两个状态</li>
+    <li>文件改动清单：精确到每个文件的职责</li>
+    <li>降级策略：高德 API 不可用时回退到本地地址库</li>
+  </ul>
+  <div class="divider"></div>
+  <h3>案例：照片墙 + 距离排序的分层方案</h3>
+  <p>两个功能同时开发，先产出完整方案，明确实现顺序：</p>
+  <div class="code">类型(types) → 工具函数(lib) → Mock 数据 → 服务层(services) → UI 层</div>
+  <p>18 个文件的协调改动在一个 commit 里完成，没有中间的"半成品"状态。</p>
+</div>
+
+<!-- Slide 6: 维度三 — 编码 -->
+<div class="slide" id="s6">
+  <span class="tag tag-purple">维度三</span>
+  <h2>编码</h2>
+  <h3>案例 1：自底向上的分层改动（19 files, +739 lines）</h3>
+  <p>同时实现 6 个功能，严格分层推进：</p>
+  <div class="code">1. 类型层：types/index.ts 新增 CatProfile、Review、CheckIn 接口
+2. 服务层：新建 cat-service.ts、review-service.ts
+3. Action 层：actions.ts 传递 rating/comment
+4. UI 层：星级评分、加急开关、签到时间线</div>
+  <p>每一层改完后 TypeScript 类型都是通的，保证无"半成品"状态。</p>
+  <div class="divider"></div>
+  <h3>案例 2：通用分页组件</h3>
+  <p>用户说"每页展示 5 条"，Claude Code 创建了通用 <span class="highlight">Pagination</span> 组件，被 3 个页面复用：</p>
+  <div class="code">&lt;Pagination total={allOrders.length} pageSize={PAGE_SIZE} basePath="/user" /&gt;</div>
+</div>
+
+<!-- Slide 7: 维度三续 — 编码 -->
+<div class="slide" id="s7">
+  <span class="tag tag-purple">维度三</span>
+  <h2>编码（续）</h2>
+  <h3>案例 3：Haversine 距离计算 — 15 行实现</h3>
+  <div class="code">// src/lib/distance.ts
+export function haversineDistance(a: Coordinates, b: Coordinates): number {
+  const R = 6371;
+  const dLat = ((b.lat - a.lat) * Math.PI) / 180;
+  const dLng = ((b.lng - a.lng) * Math.PI) / 180;
+  const x = Math.sin(dLat/2)**2 + Math.cos(a.lat*Math.PI/180)
+            * Math.cos(b.lat*Math.PI/180) * Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1-x));
+}
+export function formatDistance(km: number): string {
+  return km < 1 ? `${Math.round(km*1000)}m` : `${km.toFixed(1)}km`;
+}</div>
+  <h3>案例 4：再来一单 — URL 参数驱动的表单预填</h3>
+  <p>零额外状态管理，纯 URL search params 传递历史订单数据到创建页：</p>
+  <div class="code">const params = new URLSearchParams({
+  catCount: String(order.catCount),
+  address: order.address,
+  notes: order.notes || "",
+  urgent: String(!!order.urgent),
+});
+router.push(`/user/create?${params}`);</div>
+</div>
+
+<!-- Slide 8: 维度四 — Code Review -->
+<div class="slide" id="s8">
+  <span class="tag tag-orange">维度四</span>
+  <h2>Code Review</h2>
+  <h3>案例 1：tsc --noEmit 作为自动 Code Review 门禁</h3>
+  <p>每次改动后运行 <span class="highlight">tsc --noEmit</span>，形成"编码 → 检查 → 修复"闭环：</p>
+  <ul>
+    <li>变量从 <code>done</code> 改名为 <code>pendingReview</code> 后，JSX 里仍有一处 <code>done.length</code> → 被类型检查立即捕获</li>
+    <li>18 个文件改动后 tsc 一次通过 → 验证了分层改动策略的可靠性</li>
+  </ul>
+  <div class="divider"></div>
+  <h3>案例 2：npm run build 捕获 import 路径错误</h3>
+  <p><code>history-order-card.tsx</code> 引用了 <code>./order-detail-dialog</code>，但文件在上级目录。</p>
+  <p>修正为 <code>../order-detail-dialog</code> 后通过。<span class="highlight">tsc 通过 ≠ Next.js 模块解析也能通过</span>。</p>
+  <div class="divider"></div>
+  <h3>案例 3：删除按钮的 UI 迭代</h3>
+  <p>初版：全宽红色按钮 → 用户反馈"太鲜艳" → 精准调整三个维度：位置（移到徽章下方）、尺寸（同徽章大小）、颜色（低调灰色）</p>
+</div>
+
+<!-- Slide 9: 维度五 — 测试 -->
+<div class="slide" id="s9">
+  <span class="tag tag-blue">维度五</span>
+  <h2>测试</h2>
+  <h3>案例 1：懒检查机制替代定时器</h3>
+  <p><code>pending_review</code> 超过 3 小时需自动转为 <code>paid</code>。没有引入 cron job，而是在每个查询入口调用：</p>
+  <div class="code">function autoCompleteExpired() {
+  const now = Date.now();
+  for (const order of getStore()) {
+    if (order.status === "pending_review" && order.completedAt &&
+        now - new Date(order.completedAt).getTime() >= AUTO_COMPLETE_MS) {
+      order.status = "paid";
+    }
+  }
+}</div>
+  <p>零额外基础设施，每次读取时自动校验数据一致性。</p>
+  <div class="divider"></div>
+  <h3>案例 2：Suspense 边界问题</h3>
+  <p>引入 <code>useSearchParams()</code> 后 <span class="highlight">npm run build 报错</span>：Next.js 要求该 Hook 必须在 Suspense 内。</p>
+  <p>修复：将组件拆为 wrapper（含 Suspense）+ inner（含 Hook），4 行改动解决。</p>
+</div>
+
+<!-- Slide 10: 维度五续 — 测试 -->
+<div class="slide" id="s10">
+  <span class="tag tag-blue">维度五</span>
+  <h2>测试（续）</h2>
+  <h3>案例 3：Mock 数据缓存刷新 — 4 行修复</h3>
+  <p>新增 50 条 Mock 数据后，热重载仍显示旧数据。根因：<code>globalThis.__orders</code> 被缓存。</p>
+  <div class="code">const STORE_VERSION = MOCK_ORDERS.length;
+if (!globalForOrders.__orders ||
+    globalForOrders.__ordersVersion !== STORE_VERSION) {
+  globalForOrders.__orders = [...MOCK_ORDERS];
+  globalForOrders.__ordersVersion = STORE_VERSION;
+}</div>
+  <p>最小侵入方案，解决了开发体验的关键痛点。</p>
+</div>
+
+<!-- Slide 11: 维度六 — 安全 -->
+<div class="slide" id="s11">
+  <span class="tag tag-green">维度六</span>
+  <h2>安全</h2>
+  <h3>案例 1：API Key 保护与降级策略</h3>
+  <ul>
+    <li>高德 API Key 通过 <span class="highlight">NEXT_PUBLIC_AMAP_KEY</span> 环境变量注入</li>
+    <li><code>.env.local</code> 被 <code>.gitignore</code> 排除，不会泄露到 Git</li>
+    <li>API 调用做了 try/catch，失败时<span class="highlight">静默降级为本地地址库</span></li>
+    <li>不向前端暴露错误详情</li>
+  </ul>
+  <div class="divider"></div>
+  <h3>案例 2：deleteOrder 的权限校验</h3>
+  <div class="code">deleteOrder(orderId: string, userId: string): boolean {
+  const order = store.find((o) => o.id === orderId);
+  if (!order || order.userId !== userId) return false;  // 防止越权删除
+  setStore(store.filter((o) => o.id !== orderId));
+  return true;
+}</div>
+  <p>虽然 MVP 用 Mock 用户，但<span class="highlight">安全边界从第一天就建立</span>，后续接入真实认证时无需重构。</p>
+  <p style="margin-top:12px;">用户手机号脱敏显示（138****1234），地址信息只在订单上下文中展示。</p>
+</div>
+
+<!-- Slide 12: 维度七 — 版本管理 -->
+<div class="slide" id="s12">
+  <span class="tag tag-purple">维度七</span>
+  <h2>版本管理</h2>
+  <h3>案例 1：语义化 commit 历史</h3>
+  <div class="code">feat: implement MVP core flow
+feat: add address search and review-payment flow
+fix: force-dynamic pages, amap address search
+feat: add cat avatars, AI recommendation tags
+feat: add 6 new features - cat profiles, ratings...
+feat: add 50 mock orders and pagination
+fix: refresh mock data cache
+docs: rewrite README in Chinese
+feat: add photo wall, distance sorting, history orders
+docs: update README, ARCHITECTURE, REQUIREMENTS
+feat: add cat diary, reorder button, and service timeline</div>
+  <p>每个 commit 都是完整的、可运行的功能增量，没有 WIP 或 fix typo 噪音。</p>
+  <div class="divider"></div>
+  <h3>案例 2：代码与文档同步更新</h3>
+  <p>每次功能开发完成后，同步更新 <span class="highlight">README.md + ARCHITECTURE.md + REQUIREMENTS.md</span>，文档和代码在同一个流程中维护。</p>
+</div>
+
+<!-- Slide 13: 加分项 — CLAUDE.md -->
+<div class="slide" id="s13">
+  <span class="tag tag-orange">加分项</span>
+  <h2>CLAUDE.md 工程经验</h2>
+  <p style="font-size:26px; margin-bottom:20px;"><span class="highlight">CLAUDE.md 是整个项目 ROI 最高的投入</span></p>
+  <p>在写任何业务代码之前，先创建这份"项目宪法"：</p>
+  <div class="grid2" style="margin-top:20px;">
+    <div class="card">
+      <h3>📋 规范内容</h3>
+      <ul>
+        <li>构建命令置顶（dev / build / tsc）</li>
+        <li>目录结构约定</li>
+        <li>命名规范（kebab-case / PascalCase）</li>
+        <li>Git 提交规范（feat/fix/docs）</li>
+        <li>Agent 协作规则</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>✅ 实际效果</h3>
+      <ul>
+        <li>写一次，12 个 Phase 持续生效</li>
+        <li>所有文件自动放到正确位置</li>
+        <li>commit 格式全程统一</li>
+        <li>无需每次重复约定规范</li>
+        <li>新功能自动遵循架构</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 14: 协作模式 -->
+<div class="slide" id="s14">
+  <span class="tag tag-orange">加分项</span>
+  <h2>人机协作分工模式</h2>
+  <div class="grid2">
+    <div class="card">
+      <h3>👤 人（我）</h3>
+      <ul>
+        <li>定义需求方向</li>
+        <li>审核 UI 效果</li>
+        <li>提出体验优化建议</li>
+        <li>决定功能优先级</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>🤖 Claude Code</h3>
+      <ul>
+        <li>需求拆解 & 产品设计</li>
+        <li>架构设计 & 方案评审</li>
+        <li>编码实现 & 自我检查</li>
+        <li>文档维护 & 版本管理</li>
+      </ul>
+    </div>
+  </div>
+  <div class="divider"></div>
+  <h3>典型协作循环</h3>
+  <p>1. 我说"接单大厅要支持按距离排序"</p>
+  <p>2. Claude Code 产出完整方案（Haversine 公式 + 坐标数据 + 排序切换 UI）</p>
+  <p>3. 我看效果后说"还要支持按时间排序切换"</p>
+  <p>4. Claude Code 用 URL query param 实现，保持 Server Component 架构不变</p>
+  <p style="margin-top:16px; color:#fbbf24; font-size:24px;">我专注于"做什么"和"好不好"，Claude Code 负责"怎么做"和"做对没有"</p>
+</div>
+
+<!-- Slide 15: 总结 -->
+<div class="slide" id="s15">
+  <div class="emoji">🎯</div>
+  <h1>总结</h1>
+  <div style="margin-top:20px;">
+    <p style="font-size:26px; line-height:2;">
+      <span class="highlight">12</span> 个迭代阶段 ·
+      <span class="highlight">65+</span> 文件 ·
+      <span class="highlight">9,500+</span> 行代码
+    </p>
+  </div>
+  <div style="margin-top:30px;">
+    <ul style="font-size:24px; line-height:2.2;">
+      <li><strong>需求理解</strong>：从五个字到完整产品设计，自主设计推荐算法和日记功能</li>
+      <li><strong>架构设计</strong>：Plan Mode 先对齐方案，分层实现保证类型安全</li>
+      <li><strong>编码</strong>：自底向上分层改动，通用组件复用，最小侵入原则</li>
+      <li><strong>Code Review</strong>：tsc + build 双重门禁，用户反馈精准迭代</li>
+      <li><strong>测试</strong>：懒检查机制、Suspense 边界修复、缓存版本号</li>
+      <li><strong>安全</strong>：API Key 保护、权限校验、数据脱敏</li>
+      <li><strong>版本管理</strong>：语义化 commit、代码文档同步更新</li>
+    </ul>
+  </div>
+  <p style="margin-top:30px; font-size:20px; color:#64748b;">谢谢！</p>
+</div>
+
+<!-- Navigation -->
+<div class="nav">
+  <button onclick="prev()">←</button>
+  <button onclick="next()">→</button>
+</div>
+<div class="counter" id="counter">1 / 15</div>
+
+<script>
+let current = 0;
+const slides = document.querySelectorAll('.slide');
+const total = slides.length;
+
+function show(n) {
+  slides[current].classList.remove('active');
+  current = (n + total) % total;
+  slides[current].classList.add('active');
+  document.getElementById('counter').textContent = `${current + 1} / ${total}`;
+}
+function next() { show(current + 1); }
+function prev() { show(current - 1); }
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === ' ') next();
+  if (e.key === 'ArrowLeft') prev();
+});
+</script>
+</body>
+</html>
